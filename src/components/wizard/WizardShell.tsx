@@ -21,9 +21,9 @@ const STEPS = [
 export const WIZARD_FORM_ID = 'wizard-step-form';
 
 export function WizardShell() {
-  const currentStep = useTaxStore((s) => s.currentStep);
-  const prevStep = useTaxStore((s) => s.prevStep);
-  const stepLabels = useTaxStore((s) => s.stepLabels);
+  const currentStep = useTaxStore(s => s.currentStep);
+  const prevStep = useTaxStore(s => s.prevStep);
+  const stepLabels = useTaxStore(s => s.stepLabels);
 
   const StepComponent = STEPS[currentStep];
   const isFirstStep = currentStep === 0;
@@ -31,9 +31,7 @@ export function WizardShell() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="mb-2 text-3xl font-bold text-gray-900">
-        Taxtor
-      </h1>
+      <h1 className="mb-2 text-3xl font-bold text-gray-900">Taxtor</h1>
       <p className="mb-6 text-gray-600">
         Indian Advance Tax Calculator &mdash; FY 2025-26 (AY 2026-27)
       </p>

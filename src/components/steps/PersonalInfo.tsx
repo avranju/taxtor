@@ -32,9 +32,9 @@ const RESIDENTIAL_STATUSES = [
 ] as const;
 
 export function PersonalInfo() {
-  const personalInfo = useTaxStore((s) => s.personalInfo);
-  const setPersonalInfo = useTaxStore((s) => s.setPersonalInfo);
-  const nextStep = useTaxStore((s) => s.nextStep);
+  const personalInfo = useTaxStore(s => s.personalInfo);
+  const setPersonalInfo = useTaxStore(s => s.setPersonalInfo);
+  const nextStep = useTaxStore(s => s.nextStep);
 
   const {
     register,
@@ -79,9 +79,7 @@ export function PersonalInfo() {
 
       {/* Financial Year (read-only) */}
       <div>
-        <Label.Root className="text-sm font-medium text-gray-700">
-          Financial Year
-        </Label.Root>
+        <Label.Root className="text-sm font-medium text-gray-700">Financial Year</Label.Root>
         <div className="mt-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
           FY 2025-26 (AY 2026-27)
         </div>
@@ -101,9 +99,7 @@ export function PersonalInfo() {
             errors.name ? 'border-red-400 focus:ring-red-500' : 'border-gray-300'
           }`}
         />
-        {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-        )}
+        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
       </div>
 
       {/* PAN */}
@@ -117,7 +113,7 @@ export function PersonalInfo() {
           placeholder="AAAAA1234A"
           maxLength={10}
           {...register('pan', {
-            onChange: (e) => {
+            onChange: e => {
               e.target.value = e.target.value.toUpperCase();
             },
           })}
@@ -125,9 +121,7 @@ export function PersonalInfo() {
             errors.pan ? 'border-red-400 focus:ring-red-500' : 'border-gray-300'
           }`}
         />
-        {errors.pan && (
-          <p className="mt-1 text-sm text-red-600">{errors.pan.message}</p>
-        )}
+        {errors.pan && <p className="mt-1 text-sm text-red-600">{errors.pan.message}</p>}
       </div>
 
       {/* Taxpayer Category (Age Bracket) */}
@@ -138,13 +132,13 @@ export function PersonalInfo() {
         <RadioGroup.Root
           className="mt-2 space-y-2"
           value={ageBracket}
-          onValueChange={(value) =>
+          onValueChange={value =>
             setValue('ageBracket', value as PersonalInfoForm['ageBracket'], {
               shouldValidate: true,
             })
           }
         >
-          {AGE_BRACKETS.map((bracket) => (
+          {AGE_BRACKETS.map(bracket => (
             <div key={bracket.value} className="flex items-center gap-3">
               <RadioGroup.Item
                 value={bracket.value}
@@ -157,8 +151,7 @@ export function PersonalInfo() {
                 htmlFor={`age-${bracket.value}`}
                 className="cursor-pointer text-sm text-gray-700"
               >
-                {bracket.label}{' '}
-                <span className="text-gray-400">({bracket.description})</span>
+                {bracket.label} <span className="text-gray-400">({bracket.description})</span>
               </Label.Root>
             </div>
           ))}
@@ -173,13 +166,13 @@ export function PersonalInfo() {
         <RadioGroup.Root
           className="mt-2 space-y-2"
           value={residentialStatus}
-          onValueChange={(value) =>
+          onValueChange={value =>
             setValue('residentialStatus', value as PersonalInfoForm['residentialStatus'], {
               shouldValidate: true,
             })
           }
         >
-          {RESIDENTIAL_STATUSES.map((status) => (
+          {RESIDENTIAL_STATUSES.map(status => (
             <div key={status.value} className="flex items-center gap-3">
               <RadioGroup.Item
                 value={status.value}

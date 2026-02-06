@@ -55,10 +55,7 @@ export async function fetchAndParseForexCsv(): Promise<ForexRate[]> {
  * Binary search for a rate on or before the target date.
  * Returns null if the target date is before the dataset start.
  */
-export function lookupRate(
-  rates: ForexRate[],
-  targetDate: string
-): ForexRateLookupResult | null {
+export function lookupRate(rates: ForexRate[], targetDate: string): ForexRateLookupResult | null {
   if (rates.length === 0) return null;
 
   // If target is before the earliest date in the dataset

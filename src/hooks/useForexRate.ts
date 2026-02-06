@@ -30,10 +30,10 @@ export function useForexRate(date: string | undefined): UseForexRateResult {
 
     let cancelled = false;
 
-    setResult((prev) => ({ ...prev, loading: true, error: null }));
+    setResult(prev => ({ ...prev, loading: true, error: null }));
 
     getForexRates()
-      .then((rates) => {
+      .then(rates => {
         if (cancelled || latestDateRef.current !== date) return;
 
         const lookup = lookupRate(rates, date);
@@ -56,7 +56,7 @@ export function useForexRate(date: string | undefined): UseForexRateResult {
           error: null,
         });
       })
-      .catch((err) => {
+      .catch(err => {
         if (cancelled || latestDateRef.current !== date) return;
         setResult({
           rate: null,

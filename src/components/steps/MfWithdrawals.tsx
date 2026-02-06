@@ -23,11 +23,11 @@ const withdrawalSchema = z
     costBasis: z.number().min(0, 'Cannot be negative'),
     tds: z.number().min(0, 'Cannot be negative'),
   })
-  .refine((data) => data.costBasis <= data.amountWithdrawn, {
+  .refine(data => data.costBasis <= data.amountWithdrawn, {
     message: 'Cost basis cannot exceed amount withdrawn',
     path: ['costBasis'],
   })
-  .refine((data) => data.tds <= data.amountWithdrawn, {
+  .refine(data => data.tds <= data.amountWithdrawn, {
     message: 'TDS cannot exceed amount withdrawn',
     path: ['tds'],
   });
@@ -50,8 +50,7 @@ function getGainsClassification(
   fundType: 'debt' | 'equity',
   holdingMonths: number
 ): { type: 'LTCG' | 'STCG'; threshold: number } {
-  const threshold =
-    fundType === 'debt' ? DEBT_LTCG_THRESHOLD_MONTHS : EQUITY_LTCG_THRESHOLD_MONTHS;
+  const threshold = fundType === 'debt' ? DEBT_LTCG_THRESHOLD_MONTHS : EQUITY_LTCG_THRESHOLD_MONTHS;
   return {
     type: holdingMonths > threshold ? 'LTCG' : 'STCG',
     threshold,
@@ -88,9 +87,9 @@ function createEmptyWithdrawal() {
 }
 
 export function MfWithdrawals() {
-  const mfWithdrawals = useTaxStore((s) => s.mfWithdrawals);
-  const setMfWithdrawals = useTaxStore((s) => s.setMfWithdrawals);
-  const nextStep = useTaxStore((s) => s.nextStep);
+  const mfWithdrawals = useTaxStore(s => s.mfWithdrawals);
+  const setMfWithdrawals = useTaxStore(s => s.setMfWithdrawals);
+  const nextStep = useTaxStore(s => s.nextStep);
 
   const [hasMfWithdrawals, setHasMfWithdrawals] = useState(mfWithdrawals.length > 0);
   const [collapsedEntries, setCollapsedEntries] = useState<Set<number>>(new Set());
@@ -107,7 +106,7 @@ export function MfWithdrawals() {
     defaultValues: {
       withdrawals:
         mfWithdrawals.length > 0
-          ? mfWithdrawals.map((w) => ({
+          ? mfWithdrawals.map(w => ({
               id: w.id,
               fundName: w.fundName,
               fundType: w.fundType,
@@ -129,7 +128,7 @@ export function MfWithdrawals() {
   const watchedWithdrawals = watch('withdrawals');
 
   const toggleCollapse = (index: number) => {
-    setCollapsedEntries((prev) => {
+    setCollapsedEntries(prev => {
       const next = new Set(prev);
       if (next.has(index)) {
         next.delete(index);
@@ -170,7 +169,7 @@ export function MfWithdrawals() {
   }, [watchedWithdrawals]);
 
   const onSubmit = (data: FormValues) => {
-    const entries = data.withdrawals.map((w) => ({
+    const entries = data.withdrawals.map(w => ({
       id: w.id,
       fundName: w.fundName,
       fundType: w.fundType,
@@ -194,7 +193,7 @@ export function MfWithdrawals() {
     return (
       <form
         id={WIZARD_FORM_ID}
-        onSubmit={(e) => {
+        onSubmit={e => {
           e.preventDefault();
           onSkip();
         }}
@@ -229,22 +228,16 @@ export function MfWithdrawals() {
 
       {fields.map((field, index) => {
         const w = watchedWithdrawals?.[index];
-        const holdingMonths = w
-          ? computeHoldingMonths(w.dateOfInvestment, w.dateOfWithdrawal)
-          : 0;
+        const holdingMonths = w ? computeHoldingMonths(w.dateOfInvestment, w.dateOfWithdrawal) : 0;
         const classification = w
           ? getGainsClassification(w.fundType, holdingMonths)
           : { type: 'STCG' as const, threshold: 36 };
-        const capitalGain =
-          (Number(w?.amountWithdrawn) || 0) - (Number(w?.costBasis) || 0);
+        const capitalGain = (Number(w?.amountWithdrawn) || 0) - (Number(w?.costBasis) || 0);
         const isCollapsed = collapsedEntries.has(index);
         const entryErrors = errors.withdrawals?.[index];
 
         return (
-          <div
-            key={field.id}
-            className="rounded-lg border border-gray-200 bg-white shadow-sm"
-          >
+          <div key={field.id} className="rounded-lg border border-gray-200 bg-white shadow-sm">
             {/* Card Header */}
             <div
               className="flex cursor-pointer items-center justify-between px-4 py-3"
@@ -283,10 +276,10 @@ export function MfWithdrawals() {
                 {fields.length > 1 && (
                   <button
                     type="button"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       remove(index);
-                      setCollapsedEntries((prev) => {
+                      setCollapsedEntries(prev => {
                         const next = new Set<number>();
                         for (const i of prev) {
                           if (i < index) next.add(i);
@@ -298,8 +291,18 @@ export function MfWithdrawals() {
                     className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
                     title="Remove entry"
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
                     </svg>
                   </button>
                 )}
@@ -345,13 +348,13 @@ export function MfWithdrawals() {
                   <RadioGroup.Root
                     className="mt-2 flex gap-4"
                     value={w?.fundType || 'debt'}
-                    onValueChange={(value) =>
+                    onValueChange={value =>
                       setValue(`withdrawals.${index}.fundType`, value as 'debt' | 'equity', {
                         shouldValidate: true,
                       })
                     }
                   >
-                    {FUND_TYPES.map((ft) => (
+                    {FUND_TYPES.map(ft => (
                       <div key={ft.value} className="flex items-center gap-2">
                         <RadioGroup.Item
                           value={ft.value}
@@ -364,8 +367,7 @@ export function MfWithdrawals() {
                           htmlFor={`withdrawals-${index}-fund-${ft.value}`}
                           className="cursor-pointer text-sm text-gray-700"
                         >
-                          {ft.label}{' '}
-                          <span className="text-gray-400">({ft.description})</span>
+                          {ft.label} <span className="text-gray-400">({ft.description})</span>
                         </Label.Root>
                       </div>
                     ))}
@@ -501,9 +503,7 @@ export function MfWithdrawals() {
                     />
                   </div>
                   {entryErrors?.costBasis && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {entryErrors.costBasis.message}
-                    </p>
+                    <p className="mt-1 text-sm text-red-600">{entryErrors.costBasis.message}</p>
                   )}
                 </div>
 
@@ -527,9 +527,7 @@ export function MfWithdrawals() {
                       placeholder="0"
                       {...register(`withdrawals.${index}.tds`, { valueAsNumber: true })}
                       className={`block w-full rounded-md border py-2 pl-7 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        entryErrors?.tds
-                          ? 'border-red-400 focus:ring-red-500'
-                          : 'border-gray-300'
+                        entryErrors?.tds ? 'border-red-400 focus:ring-red-500' : 'border-gray-300'
                       }`}
                     />
                   </div>
@@ -574,7 +572,13 @@ export function MfWithdrawals() {
         onClick={() => append(createEmptyWithdrawal())}
         className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600"
       >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
         Add Withdrawal
@@ -586,7 +590,7 @@ export function MfWithdrawals() {
 
       {/* Aggregate Summary */}
       {watchedWithdrawals?.length > 0 &&
-        watchedWithdrawals.some((w) => (Number(w.amountWithdrawn) || 0) > 0) && (
+        watchedWithdrawals.some(w => (Number(w.amountWithdrawn) || 0) > 0) && (
           <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3">
             <p className="text-sm font-medium text-blue-900">
               Aggregate Summary ({watchedWithdrawals.length} withdrawal
@@ -654,7 +658,7 @@ function SkipCheckbox({
       <Checkbox.Root
         id="hasMfWithdrawals"
         checked={checked}
-        onCheckedChange={(c) => onChange(c === true)}
+        onCheckedChange={c => onChange(c === true)}
         className="flex h-5 w-5 items-center justify-center rounded border border-gray-300 bg-white data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
         <Checkbox.Indicator>

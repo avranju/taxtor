@@ -6,13 +6,7 @@ import * as Checkbox from '@radix-ui/react-checkbox';
 import { useTaxStore } from '../../store/tax-store';
 import { WIZARD_FORM_ID } from '../wizard/WizardShell';
 import { useState, useMemo } from 'react';
-import {
-  differenceInMonths,
-  parseISO,
-  startOfMonth,
-  addMonths,
-  isAfter,
-} from 'date-fns';
+import { differenceInMonths, parseISO, startOfMonth, addMonths, isAfter } from 'date-fns';
 
 const FY_START = '2025-04-01';
 const FY_END = '2026-03-31';
@@ -27,24 +21,21 @@ const salarySchema = z
     tds: z.number().min(0, 'Cannot be negative'),
   })
   .refine(
-    (data) => {
+    data => {
       const start = parseISO(data.employmentStartDate);
       const end = parseISO(data.employmentEndDate);
       return !isAfter(start, end);
     },
     { message: 'Start date must be on or before end date', path: ['employmentStartDate'] }
   )
-  .refine(
-    (data) => data.professionalTax <= data.grossSalary,
-    {
-      message: 'Professional tax cannot exceed gross salary',
-      path: ['professionalTax'],
-    }
-  )
-  .refine(
-    (data) => data.tds <= data.grossSalary,
-    { message: 'TDS cannot exceed gross salary', path: ['tds'] }
-  );
+  .refine(data => data.professionalTax <= data.grossSalary, {
+    message: 'Professional tax cannot exceed gross salary',
+    path: ['professionalTax'],
+  })
+  .refine(data => data.tds <= data.grossSalary, {
+    message: 'TDS cannot exceed gross salary',
+    path: ['tds'],
+  });
 
 type SalaryForm = z.infer<typeof salarySchema>;
 
@@ -78,13 +69,12 @@ const formatINR = (value: number) =>
   }).format(value);
 
 export function SalaryIncome() {
-  const salaryIncome = useTaxStore((s) => s.salaryIncome);
-  const personalInfo = useTaxStore((s) => s.personalInfo);
-  const setSalaryIncome = useTaxStore((s) => s.setSalaryIncome);
-  const nextStep = useTaxStore((s) => s.nextStep);
+  const salaryIncome = useTaxStore(s => s.salaryIncome);
+  const personalInfo = useTaxStore(s => s.personalInfo);
+  const setSalaryIncome = useTaxStore(s => s.setSalaryIncome);
+  const nextStep = useTaxStore(s => s.nextStep);
 
-  const defaultEndDate =
-    personalInfo.dateOfUnemployment ?? FY_END;
+  const defaultEndDate = personalInfo.dateOfUnemployment ?? FY_END;
 
   const [hasSalary, setHasSalary] = useState(salaryIncome !== null);
 
@@ -116,11 +106,7 @@ export function SalaryIncome() {
 
   const standardDeduction = useMemo(
     () =>
-      computeStandardDeduction(
-        Number(watchedGross) || 0,
-        Number(watchedPT) || 0,
-        employmentMonths
-      ),
+      computeStandardDeduction(Number(watchedGross) || 0, Number(watchedPT) || 0, employmentMonths),
     [watchedGross, watchedPT, employmentMonths]
   );
 
@@ -152,7 +138,7 @@ export function SalaryIncome() {
     return (
       <form
         id={WIZARD_FORM_ID}
-        onSubmit={(e) => {
+        onSubmit={e => {
           e.preventDefault();
           onSkip();
         }}
@@ -160,16 +146,14 @@ export function SalaryIncome() {
       >
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Salary Income</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Employment income details for FY 2025-26
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Employment income details for FY 2025-26</p>
         </div>
 
         <div className="flex items-center gap-3">
           <Checkbox.Root
             id="hasSalary"
             checked={hasSalary}
-            onCheckedChange={(checked) => setHasSalary(checked === true)}
+            onCheckedChange={checked => setHasSalary(checked === true)}
             className="flex h-5 w-5 items-center justify-center rounded border border-gray-300 bg-white data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             <Checkbox.Indicator>
@@ -200,9 +184,7 @@ export function SalaryIncome() {
     <form id={WIZARD_FORM_ID} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-gray-900">Salary Income</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Employment income details for FY 2025-26
-        </p>
+        <p className="mt-1 text-sm text-gray-500">Employment income details for FY 2025-26</p>
       </div>
 
       {/* Has salary toggle */}
@@ -210,7 +192,7 @@ export function SalaryIncome() {
         <Checkbox.Root
           id="hasSalary"
           checked={hasSalary}
-          onCheckedChange={(checked) => setHasSalary(checked === true)}
+          onCheckedChange={checked => setHasSalary(checked === true)}
           className="flex h-5 w-5 items-center justify-center rounded border border-gray-300 bg-white data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           <Checkbox.Indicator>
@@ -247,15 +229,11 @@ export function SalaryIncome() {
               max={FY_END}
               {...register('employmentStartDate')}
               className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.employmentStartDate
-                  ? 'border-red-400 focus:ring-red-500'
-                  : 'border-gray-300'
+                errors.employmentStartDate ? 'border-red-400 focus:ring-red-500' : 'border-gray-300'
               }`}
             />
             {errors.employmentStartDate && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.employmentStartDate.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{errors.employmentStartDate.message}</p>
             )}
           </div>
           <div>
@@ -269,15 +247,11 @@ export function SalaryIncome() {
               max={FY_END}
               {...register('employmentEndDate')}
               className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.employmentEndDate
-                  ? 'border-red-400 focus:ring-red-500'
-                  : 'border-gray-300'
+                errors.employmentEndDate ? 'border-red-400 focus:ring-red-500' : 'border-gray-300'
               }`}
             />
             {errors.employmentEndDate && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.employmentEndDate.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{errors.employmentEndDate.message}</p>
             )}
           </div>
         </div>
@@ -329,9 +303,7 @@ export function SalaryIncome() {
             placeholder="0"
             {...register('professionalTax', { valueAsNumber: true })}
             className={`block w-full rounded-md border py-2 pl-7 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.professionalTax
-                ? 'border-red-400 focus:ring-red-500'
-                : 'border-gray-300'
+              errors.professionalTax ? 'border-red-400 focus:ring-red-500' : 'border-gray-300'
             }`}
           />
         </div>
@@ -342,9 +314,7 @@ export function SalaryIncome() {
 
       {/* Standard Deduction (auto-calculated) */}
       <div>
-        <Label.Root className="text-sm font-medium text-gray-700">
-          Standard Deduction
-        </Label.Root>
+        <Label.Root className="text-sm font-medium text-gray-700">Standard Deduction</Label.Root>
         <div className="mt-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
           {formatINR(standardDeduction)}
           {employmentMonths < 12 && (
@@ -376,9 +346,7 @@ export function SalaryIncome() {
             }`}
           />
         </div>
-        {errors.tds && (
-          <p className="mt-1 text-sm text-red-600">{errors.tds.message}</p>
-        )}
+        {errors.tds && <p className="mt-1 text-sm text-red-600">{errors.tds.message}</p>}
       </div>
 
       {/* Net Salary Summary */}
@@ -398,9 +366,7 @@ export function SalaryIncome() {
             </div>
             <div className="flex justify-between">
               <dt className="text-blue-700">Less: Standard Deduction</dt>
-              <dd className="font-medium text-blue-900">
-                &minus; {formatINR(standardDeduction)}
-              </dd>
+              <dd className="font-medium text-blue-900">&minus; {formatINR(standardDeduction)}</dd>
             </div>
             <div className="flex justify-between border-t border-blue-200 pt-1">
               <dt className="font-medium text-blue-900">Net Taxable Salary</dt>

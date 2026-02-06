@@ -81,7 +81,7 @@ export const useTaxStore = create<TaxStore>()(
       highestStepReached: 0,
       stepLabels: STEP_LABELS,
 
-      setCurrentStep: (step) => set({ currentStep: step }),
+      setCurrentStep: step => set({ currentStep: step }),
       nextStep: () => {
         const { currentStep, highestStepReached } = get();
         if (currentStep < STEP_LABELS.length - 1) {
@@ -98,21 +98,21 @@ export const useTaxStore = create<TaxStore>()(
           set({ currentStep: currentStep - 1 });
         }
       },
-      goToStep: (step) => {
+      goToStep: step => {
         const { highestStepReached } = get();
         if (step >= 0 && step <= highestStepReached) {
           set({ currentStep: step });
         }
       },
 
-      setPersonalInfo: (info) => set({ personalInfo: info }),
-      setSalaryIncome: (income) => set({ salaryIncome: income }),
-      setMfWithdrawals: (withdrawals) => set({ mfWithdrawals: withdrawals }),
-      setUsStockSales: (sales) => set({ usStockSales: sales }),
-      setOtherIncome: (income) => set({ otherIncome: income }),
-      setDeductions: (deductions) => set({ deductions }),
-      setAdvanceTaxPaid: (payments) => set({ advanceTaxPaid: payments }),
-      setCalculationResults: (results) => set({ calculationResults: results }),
+      setPersonalInfo: info => set({ personalInfo: info }),
+      setSalaryIncome: income => set({ salaryIncome: income }),
+      setMfWithdrawals: withdrawals => set({ mfWithdrawals: withdrawals }),
+      setUsStockSales: sales => set({ usStockSales: sales }),
+      setOtherIncome: income => set({ otherIncome: income }),
+      setDeductions: deductions => set({ deductions }),
+      setAdvanceTaxPaid: payments => set({ advanceTaxPaid: payments }),
+      setCalculationResults: results => set({ calculationResults: results }),
 
       clearAll: () => set({ ...initialState, currentStep: 0, highestStepReached: 0 }),
 
@@ -130,7 +130,7 @@ export const useTaxStore = create<TaxStore>()(
         };
       },
 
-      importData: (data) => set({ ...data, currentStep: 0, highestStepReached: 0 }),
+      importData: data => set({ ...data, currentStep: 0, highestStepReached: 0 }),
     }),
     {
       name: 'taxtor-storage',

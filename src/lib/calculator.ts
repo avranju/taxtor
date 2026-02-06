@@ -36,17 +36,12 @@ export function calculateCapitalGains(_state: TaxState): {
   };
 }
 
-export function calculateTaxLiability(
-  _state: TaxState,
-  _regime: TaxRegime
-): number {
+export function calculateTaxLiability(_state: TaxState, _regime: TaxRegime): number {
   // TODO: implement slab rates, cess, surcharge, rebate
   return 0;
 }
 
-export function calculateAdvanceTaxSchedule(
-  _state: TaxState
-): AdvanceTaxScheduleItem[] {
+export function calculateAdvanceTaxSchedule(_state: TaxState): AdvanceTaxScheduleItem[] {
   // TODO: implement required vs actual installments
   return [];
 }

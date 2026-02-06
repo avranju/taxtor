@@ -26,13 +26,16 @@ const saleSchema = z
     tds: z.number().min(0, 'Cannot be negative'),
   })
   .refine(
-    (data) => {
+    data => {
       if (!data.dateOfPurchase || !data.dateOfSale) return true;
       return parseISO(data.dateOfSale) > parseISO(data.dateOfPurchase);
     },
-    { message: 'Date of sale must be after date of purchase', path: ['dateOfSale'] }
+    {
+      message: 'Date of sale must be after date of purchase',
+      path: ['dateOfSale'],
+    }
   )
-  .refine((data) => data.tds <= data.saleProceedsINR, {
+  .refine(data => data.tds <= data.saleProceedsINR, {
     message: 'TDS cannot exceed sale proceeds',
     path: ['tds'],
   });
@@ -106,9 +109,7 @@ function RateAnnotation({ loading, error, rate, rateDate, isExactDate }: RateAnn
     return (
       <p className="mt-1 text-xs text-gray-500">
         @ ₹{rate.toFixed(2)}/$ (SBI TT Buy, {formatRateDate(rateDate)})
-        {!isExactDate && (
-          <span className="ml-1 text-gray-400">(nearest business day)</span>
-        )}
+        {!isExactDate && <span className="ml-1 text-gray-400">(nearest business day)</span>}
       </p>
     );
   }
@@ -165,8 +166,13 @@ function SaleEntryCard({
     if (!saleRate.rate || saleProceedsUSD === 0) return;
     const computed = Math.round(saleProceedsUSD * saleRate.rate);
     // Only auto-fill if field is 0 or still matches our last auto-computed value
-    if (currentSaleProceedsINR === 0 || currentSaleProceedsINR === lastAutoSaleProceedsINR.current) {
-      setValue(`sales.${index}.saleProceedsINR`, computed, { shouldValidate: true });
+    if (
+      currentSaleProceedsINR === 0 ||
+      currentSaleProceedsINR === lastAutoSaleProceedsINR.current
+    ) {
+      setValue(`sales.${index}.saleProceedsINR`, computed, {
+        shouldValidate: true,
+      });
       lastAutoSaleProceedsINR.current = computed;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -180,17 +186,16 @@ function SaleEntryCard({
     if (!purchaseRate.rate || costBasisUSD === 0) return;
     const computed = Math.round(costBasisUSD * purchaseRate.rate);
     if (currentCostBasisINR === 0 || currentCostBasisINR === lastAutoCostBasisINR.current) {
-      setValue(`sales.${index}.costBasisINR`, computed, { shouldValidate: true });
+      setValue(`sales.${index}.costBasisINR`, computed, {
+        shouldValidate: true,
+      });
       lastAutoCostBasisINR.current = computed;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [costBasisUSD, purchaseRate.rate]);
 
   return (
-    <div
-      key={fieldId}
-      className="rounded-lg border border-gray-200 bg-white shadow-sm"
-    >
+    <div key={fieldId} className="rounded-lg border border-gray-200 bg-white shadow-sm">
       {/* Card Header */}
       <div
         className="flex cursor-pointer items-center justify-between px-4 py-3"
@@ -226,15 +231,25 @@ function SaleEntryCard({
           {canRemove && (
             <button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onRemove();
               }}
               className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
               title="Remove entry"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
             </button>
           )}
@@ -291,9 +306,7 @@ function SaleEntryCard({
               }`}
             />
             {entryErrors?.dateOfPurchase && (
-              <p className="mt-1 text-sm text-red-600">
-                {entryErrors.dateOfPurchase.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{entryErrors.dateOfPurchase.message}</p>
             )}
           </div>
 
@@ -315,15 +328,11 @@ function SaleEntryCard({
               max="2026-03-31"
               {...register(`sales.${index}.dateOfSale`)}
               className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                entryErrors?.dateOfSale
-                  ? 'border-red-400 focus:ring-red-500'
-                  : 'border-gray-300'
+                entryErrors?.dateOfSale ? 'border-red-400 focus:ring-red-500' : 'border-gray-300'
               }`}
             />
             {entryErrors?.dateOfSale && (
-              <p className="mt-1 text-sm text-red-600">
-                {entryErrors.dateOfSale.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{entryErrors.dateOfSale.message}</p>
             )}
           </div>
 
@@ -373,9 +382,7 @@ function SaleEntryCard({
               />
             </div>
             {entryErrors?.saleProceedsUSD && (
-              <p className="mt-1 text-sm text-red-600">
-                {entryErrors.saleProceedsUSD.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{entryErrors.saleProceedsUSD.message}</p>
             )}
           </div>
 
@@ -415,9 +422,7 @@ function SaleEntryCard({
               isExactDate={saleRate.isExactDate}
             />
             {entryErrors?.saleProceedsINR && (
-              <p className="mt-1 text-sm text-red-600">
-                {entryErrors.saleProceedsINR.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{entryErrors.saleProceedsINR.message}</p>
             )}
           </div>
 
@@ -450,9 +455,7 @@ function SaleEntryCard({
               />
             </div>
             {entryErrors?.costBasisUSD && (
-              <p className="mt-1 text-sm text-red-600">
-                {entryErrors.costBasisUSD.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{entryErrors.costBasisUSD.message}</p>
             )}
           </div>
 
@@ -492,9 +495,7 @@ function SaleEntryCard({
               isExactDate={purchaseRate.isExactDate}
             />
             {entryErrors?.costBasisINR && (
-              <p className="mt-1 text-sm text-red-600">
-                {entryErrors.costBasisINR.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{entryErrors.costBasisINR.message}</p>
             )}
           </div>
 
@@ -527,9 +528,7 @@ function SaleEntryCard({
               />
             </div>
             {entryErrors?.brokerageCharges && (
-              <p className="mt-1 text-sm text-red-600">
-                {entryErrors.brokerageCharges.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{entryErrors.brokerageCharges.message}</p>
             )}
           </div>
 
@@ -553,9 +552,7 @@ function SaleEntryCard({
                 placeholder="0"
                 {...register(`sales.${index}.tds`, { valueAsNumber: true })}
                 className={`block w-full rounded-md border py-2 pl-7 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  entryErrors?.tds
-                    ? 'border-red-400 focus:ring-red-500'
-                    : 'border-gray-300'
+                  entryErrors?.tds ? 'border-red-400 focus:ring-red-500' : 'border-gray-300'
                 }`}
               />
             </div>
@@ -609,9 +606,9 @@ function SaleEntryCard({
 }
 
 export function UsStockIncome() {
-  const usStockSales = useTaxStore((s) => s.usStockSales);
-  const setUsStockSales = useTaxStore((s) => s.setUsStockSales);
-  const nextStep = useTaxStore((s) => s.nextStep);
+  const usStockSales = useTaxStore(s => s.usStockSales);
+  const setUsStockSales = useTaxStore(s => s.setUsStockSales);
+  const nextStep = useTaxStore(s => s.nextStep);
 
   const [hasUsStockSales, setHasUsStockSales] = useState(usStockSales.length > 0);
   const [collapsedEntries, setCollapsedEntries] = useState<Set<number>>(new Set());
@@ -628,7 +625,7 @@ export function UsStockIncome() {
     defaultValues: {
       sales:
         usStockSales.length > 0
-          ? usStockSales.map((s) => ({
+          ? usStockSales.map(s => ({
               id: s.id,
               stockName: s.stockName,
               dateOfPurchase: s.dateOfPurchase,
@@ -652,7 +649,7 @@ export function UsStockIncome() {
   const watchedSales = watch('sales');
 
   const toggleCollapse = (index: number) => {
-    setCollapsedEntries((prev) => {
+    setCollapsedEntries(prev => {
       const next = new Set(prev);
       if (next.has(index)) {
         next.delete(index);
@@ -692,11 +689,26 @@ export function UsStockIncome() {
       }
     }
 
-    return { totalSaleProceeds, totalCost, totalBrokerage, totalLtcg, totalStcg, totalTds };
-  }, [watchedSales]);
+    return {
+      totalSaleProceeds,
+      totalCost,
+      totalBrokerage,
+      totalLtcg,
+      totalStcg,
+      totalTds,
+    };
+  }, [
+    watchedSales,
+    watchedSales
+      ?.map(
+        s =>
+          `${s.saleProceedsINR}-${s.costBasisINR}-${s.brokerageCharges}-${s.tds}-${s.dateOfPurchase}-${s.dateOfSale}`
+      )
+      .join(','),
+  ]);
 
   const onSubmit = (data: FormValues) => {
-    const entries = data.sales.map((s) => ({
+    const entries = data.sales.map(s => ({
       id: s.id,
       stockName: s.stockName,
       dateOfPurchase: s.dateOfPurchase,
@@ -722,7 +734,7 @@ export function UsStockIncome() {
     return (
       <form
         id={WIZARD_FORM_ID}
-        onSubmit={(e) => {
+        onSubmit={e => {
           e.preventDefault();
           onSkip();
         }}
@@ -768,7 +780,7 @@ export function UsStockIncome() {
           onToggleCollapse={() => toggleCollapse(index)}
           onRemove={() => {
             remove(index);
-            setCollapsedEntries((prev) => {
+            setCollapsedEntries(prev => {
               const next = new Set<number>();
               for (const i of prev) {
                 if (i < index) next.add(i);
@@ -787,76 +799,75 @@ export function UsStockIncome() {
         onClick={() => append(createEmptySale())}
         className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600"
       >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
         Add Sale
       </button>
 
-      {errors.sales?.root && (
-        <p className="text-sm text-red-600">{errors.sales.root.message}</p>
-      )}
+      {errors.sales?.root && <p className="text-sm text-red-600">{errors.sales.root.message}</p>}
 
       {/* Aggregate Summary */}
-      {watchedSales?.length > 0 &&
-        watchedSales.some((s) => (Number(s.saleProceedsINR) || 0) > 0) && (
-          <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3">
-            <p className="text-sm font-medium text-blue-900">
-              Aggregate Summary ({watchedSales.length} sale
-              {watchedSales.length !== 1 ? 's' : ''})
-            </p>
-            <dl className="mt-2 space-y-1 text-sm">
+      {watchedSales?.length > 0 && watchedSales.some(s => (Number(s.saleProceedsINR) || 0) > 0) && (
+        <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3">
+          <p className="text-sm font-medium text-blue-900">
+            Aggregate Summary ({watchedSales.length} sale
+            {watchedSales.length !== 1 ? 's' : ''})
+          </p>
+          <dl className="mt-2 space-y-1 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-blue-700">Total Sale Proceeds (INR)</dt>
+              <dd className="font-medium text-blue-900">
+                {formatINR(aggregateSummary.totalSaleProceeds)}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-blue-700">Total Cost of Acquisition (INR)</dt>
+              <dd className="font-medium text-blue-900">{formatINR(aggregateSummary.totalCost)}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-blue-700">Total Brokerage &amp; Charges</dt>
+              <dd className="font-medium text-blue-900">
+                {formatINR(aggregateSummary.totalBrokerage)}
+              </dd>
+            </div>
+            {aggregateSummary.totalLtcg !== 0 && (
               <div className="flex justify-between">
-                <dt className="text-blue-700">Total Sale Proceeds (INR)</dt>
-                <dd className="font-medium text-blue-900">
-                  {formatINR(aggregateSummary.totalSaleProceeds)}
+                <dt className="text-blue-700">Long-Term Capital Gains</dt>
+                <dd
+                  className={`font-medium ${
+                    aggregateSummary.totalLtcg >= 0 ? 'text-green-700' : 'text-red-600'
+                  }`}
+                >
+                  {formatINR(aggregateSummary.totalLtcg)}
                 </dd>
               </div>
+            )}
+            {aggregateSummary.totalStcg !== 0 && (
               <div className="flex justify-between">
-                <dt className="text-blue-700">Total Cost of Acquisition (INR)</dt>
-                <dd className="font-medium text-blue-900">
-                  {formatINR(aggregateSummary.totalCost)}
+                <dt className="text-blue-700">Short-Term Capital Gains</dt>
+                <dd
+                  className={`font-medium ${
+                    aggregateSummary.totalStcg >= 0 ? 'text-amber-700' : 'text-red-600'
+                  }`}
+                >
+                  {formatINR(aggregateSummary.totalStcg)}
                 </dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-blue-700">Total Brokerage &amp; Charges</dt>
-                <dd className="font-medium text-blue-900">
-                  {formatINR(aggregateSummary.totalBrokerage)}
-                </dd>
-              </div>
-              {aggregateSummary.totalLtcg !== 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-blue-700">Long-Term Capital Gains</dt>
-                  <dd
-                    className={`font-medium ${
-                      aggregateSummary.totalLtcg >= 0 ? 'text-green-700' : 'text-red-600'
-                    }`}
-                  >
-                    {formatINR(aggregateSummary.totalLtcg)}
-                  </dd>
-                </div>
-              )}
-              {aggregateSummary.totalStcg !== 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-blue-700">Short-Term Capital Gains</dt>
-                  <dd
-                    className={`font-medium ${
-                      aggregateSummary.totalStcg >= 0 ? 'text-amber-700' : 'text-red-600'
-                    }`}
-                  >
-                    {formatINR(aggregateSummary.totalStcg)}
-                  </dd>
-                </div>
-              )}
-              <div className="flex justify-between border-t border-blue-200 pt-1">
-                <dt className="text-blue-700">Total TDS</dt>
-                <dd className="font-medium text-blue-900">
-                  {formatINR(aggregateSummary.totalTds)}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        )}
+            )}
+            <div className="flex justify-between border-t border-blue-200 pt-1">
+              <dt className="text-blue-700">Total TDS</dt>
+              <dd className="font-medium text-blue-900">{formatINR(aggregateSummary.totalTds)}</dd>
+            </div>
+          </dl>
+        </div>
+      )}
     </form>
   );
 }
@@ -873,7 +884,7 @@ function SkipCheckbox({
       <Checkbox.Root
         id="hasUsStockSales"
         checked={checked}
-        onCheckedChange={(c) => onChange(c === true)}
+        onCheckedChange={c => onChange(c === true)}
         className="flex h-5 w-5 items-center justify-center rounded border border-gray-300 bg-white data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
         <Checkbox.Indicator>

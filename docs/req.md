@@ -1,9 +1,11 @@
 # Indian Advance Tax Calculator - Requirements Specification
 
 ## Project Overview
+
 Build a React + TypeScript web application that helps Indian taxpayers calculate their advance tax liability, including penalties and interest for delayed/missed payments, specifically for FY 2025-26 (AY 2026-27).
 
 ## Technical Stack
+
 - **Framework**: React 18+ with TypeScript
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS
@@ -15,9 +17,11 @@ Build a React + TypeScript web application that helps Indian taxpayers calculate
 ## Core Functionality
 
 ### 1. Wizard Flow Structure
+
 Create a multi-step wizard with the following stages:
 
 #### Step 1: Personal Information
+
 - Financial year confirmation (default: FY 2025-26)
 - Taxpayer category:
   - Individual (below 60 years)
@@ -27,6 +31,7 @@ Create a multi-step wizard with the following stages:
 - Date of unemployment (if applicable during the year)
 
 #### Step 2: Income from Salary (if applicable)
+
 - Employment period during FY 2025-26
 - Gross salary received
 - Professional tax paid
@@ -34,7 +39,9 @@ Create a multi-step wizard with the following stages:
 - TDS deducted from salary
 
 #### Step 3: Mutual Fund Withdrawals
+
 Multiple entries supported (add/remove dynamically). Each entry captures:
+
 - Fund name (optional, e.g. "HDFC Balanced Advantage")
 - Fund type: equity-oriented or debt-oriented
 - Date of investment
@@ -47,7 +54,9 @@ Multiple entries supported (add/remove dynamically). Each entry captures:
 Skip mode: checkbox "I had mutual fund withdrawals during FY 2025-26". When unchecked, stores empty list and advances.
 
 #### Step 4: Income from Sale of US Stocks
+
 Multiple entries supported (add/remove dynamically). Each entry captures:
+
 - Stock name (optional, e.g. "AAPL, GOOGL")
 - Date of purchase
 - Date of sale (within FY 2025-26)
@@ -62,6 +71,7 @@ Multiple entries supported (add/remove dynamically). Each entry captures:
 Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, stores empty list and advances.
 
 #### Step 5: Other Income Sources
+
 - Interest from savings account
 - Interest from fixed deposits
 - Rental income
@@ -69,6 +79,7 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 - TDS deducted on each source
 
 #### Step 6: Deductions & Exemptions
+
 - Section 80C investments (PPF, ELSS, LIC, etc.) - Max ₹1.5 lakh
 - Section 80D (Health insurance) - based on age category
 - Section 80CCD(1B) (NPS) - Max ₹50,000
@@ -77,6 +88,7 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 - Other deductions under Chapter VI-A
 
 #### Step 7: Advance Tax Payments Made
+
 - Payment made by June 15, 2025 (15% of tax liability)
 - Payment made by September 15, 2025 (45% cumulative)
 - Payment made by December 15, 2025 (75% cumulative)
@@ -90,13 +102,13 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 1. **Compute Gross Total Income**
    - Salary income (after standard deduction)
    - Capital gains from mutual fund withdrawals (per entry):
-     * If debt fund held >36 months: Long-term capital gain (20% with indexation)
-     * If debt fund held ≤36 months: Short-term capital gain (add to income, tax at slab rates)
-     * If equity fund held >12 months: Long-term capital gain
-     * If equity fund held ≤12 months: Short-term capital gain
+     - If debt fund held >36 months: Long-term capital gain (20% with indexation)
+     - If debt fund held ≤36 months: Short-term capital gain (add to income, tax at slab rates)
+     - If equity fund held >12 months: Long-term capital gain
+     - If equity fund held ≤12 months: Short-term capital gain
    - Capital gains from US stocks:
-     * If held >24 months: Long-term capital gain (20% with indexation using CII)
-     * If held ≤24 months: Short-term capital gain (15% flat)
+     - If held >24 months: Long-term capital gain (20% with indexation using CII)
+     - If held ≤24 months: Short-term capital gain (15% flat)
    - Other income sources
 
 2. **Apply Deductions**
@@ -105,13 +117,13 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 
 3. **Compute Tax Liability**
    - Apply tax slabs based on regime chosen:
-     * **Old Regime** (with deductions):
+     - **Old Regime** (with deductions):
        - Up to ₹2.5L: Nil
        - ₹2.5L - ₹5L: 5%
        - ₹5L - ₹10L: 20%
        - Above ₹10L: 30%
        - Rebate u/s 87A if income ≤ ₹5L
-     * **New Regime** (FY 2025-26 rates):
+     - **New Regime** (FY 2025-26 rates):
        - Up to ₹3L: Nil
        - ₹3L - ₹7L: 5%
        - ₹7L - ₹10L: 10%
@@ -119,17 +131,16 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
        - ₹12L - ₹15L: 20%
        - Above ₹15L: 30%
        - Rebate u/s 87A if income ≤ ₹7L
-   
    - Add 4% Health & Education Cess on total tax
    - Add surcharge if applicable (income > ₹50L)
 
 4. **Calculate Advance Tax Liability**
    - If total tax liability > ₹10,000, advance tax is mandatory
    - Required installments:
-     * By June 15: 15% of total tax
-     * By Sept 15: 45% of total tax (cumulative)
-     * By Dec 15: 75% of total tax (cumulative)
-     * By March 15: 100% of total tax
+     - By June 15: 15% of total tax
+     - By Sept 15: 45% of total tax (cumulative)
+     - By Dec 15: 75% of total tax (cumulative)
+     - By March 15: 100% of total tax
 
 5. **Calculate Interest u/s 234B** (for shortfall in advance tax)
    - If advance tax paid < 90% of assessed tax
@@ -143,6 +154,7 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
    - Calculate separately for each due date
 
 ### Special Considerations
+
 - **Foreign Asset Reporting**: Flag if US investments exceed reporting thresholds
 - **TDS Credit**: Deduct all TDS from final tax payable
 - **Self-assessment tax**: Any balance after advance tax and TDS
@@ -150,6 +162,7 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 ## User Experience Requirements
 
 ### Design Principles
+
 - Clean, minimalist interface
 - Single question or related question group per screen
 - Progress indicator showing completion percentage
@@ -159,12 +172,14 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 - Contextual help tooltips for tax terms
 
 ### Wizard Navigation
+
 - "Continue" button (disabled until required fields valid)
 - "Back" button on all steps except first
 - "Save & Exit" option on every step
 - Jump to specific step from progress indicator (only for completed steps)
 
 ### Input Enhancements
+
 - Currency formatter for INR (₹) and USD ($)
 - Date pickers for transaction dates
 - Automatic calculation of holding periods
@@ -176,12 +191,14 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 ### Worksheet Structure
 
 **Section A: Income Summary**
+
 - Table showing all income heads with amounts
 - Gross Total Income
 - Total Deductions
 - Net Taxable Income
 
 **Section B: Tax Computation**
+
 - Comparison table: Old Regime vs New Regime
 - Recommended regime (lower tax)
 - Tax before cess
@@ -190,15 +207,17 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 - **Total Tax Liability**
 
 **Section C: Advance Tax Schedule**
+
 - Table with columns:
-  * Due Date
-  * Required Payment
-  * Actual Payment
-  * Shortfall
-  * Interest u/s 234C
+  - Due Date
+  - Required Payment
+  - Actual Payment
+  - Shortfall
+  - Interest u/s 234C
 - Total interest u/s 234C
 
 **Section D: Interest u/s 234B**
+
 - Required advance tax (90% of total)
 - Actual advance tax paid
 - Shortfall amount
@@ -206,10 +225,12 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 - Total interest u/s 234B
 
 **Section E: TDS Credit**
+
 - Itemized list of TDS from all sources
 - Total TDS available for credit
 
 **Section F: Amount Payable Today**
+
 - Total tax liability
 - Less: Advance tax paid
 - Less: TDS credit
@@ -218,11 +239,13 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 - **Net Tax Payable as Self-Assessment Tax**
 
 **Section G: Payment Instructions**
+
 - Challan 280 details for self-assessment tax
 - Due date reminder (July 31, 2026 for filing ITR)
 - Assessment Year: 2026-27
 
 ### Worksheet Features
+
 - Print-friendly CSS
 - Export to PDF
 - Copy to clipboard
@@ -233,6 +256,7 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 ## Additional Features
 
 ### Optional Enhancements
+
 - **Scenario Comparison**: Allow users to see tax liability under both regimes side-by-side
 - **What-if Calculator**: Adjust deduction amounts to see impact on tax
 - **Penalty Minimization Tips**: Suggest optimal payment strategy for remaining months
@@ -240,12 +264,14 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 - **Previous Year Import**: Allow uploading previous ITR JSON for pre-filling
 
 ### Data Validation
+
 - Cross-validate dates (sale date > purchase date)
 - Ensure advance tax payments don't exceed computed liability
 - Warn if TDS seems unusually high/low
 - Flag if foreign assets exceed ₹2.5 crore (Schedule FA requirement)
 
 ### Accessibility
+
 - WCAG 2.1 AA compliance
 - Keyboard navigation
 - Screen reader support
@@ -254,6 +280,7 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 ## Technical Implementation Notes
 
 ### State Management
+
 ```typescript
 interface TaxState {
   personalInfo: PersonalInfo;
@@ -268,6 +295,7 @@ interface TaxState {
 ```
 
 ### Key Calculation Functions
+
 - `calculateCapitalGains()`
 - `calculateTaxLiability(regime: 'old' | 'new')`
 - `calculateAdvanceTaxSchedule()`
@@ -276,17 +304,20 @@ interface TaxState {
 - `generateWorksheet()`
 
 ### Data Persistence
+
 - Save form state to localStorage after each step
 - Option to export/import JSON for backup
 - Clear data option with confirmation
 
 ### Error Handling
+
 - Graceful handling of calculation errors
 - User-friendly error messages
 - Validation errors shown inline near fields
 - Summary of all errors before proceeding
 
 ## Deliverables
+
 1. Fully functional React + TypeScript app
 2. README with setup instructions
 3. Sample data for testing
@@ -294,7 +325,9 @@ interface TaxState {
 5. Brief user guide explaining each step
 
 ## Compliance Disclaimer
+
 Include prominent disclaimer:
+
 > "This calculator provides estimates based on information provided. Tax laws are complex and subject to interpretation. Always consult a qualified Chartered Accountant or tax professional before making tax payments or filing returns. This tool is for educational purposes only."
 
 ---

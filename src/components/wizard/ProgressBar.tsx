@@ -1,10 +1,10 @@
 import { useTaxStore } from '../../store/tax-store';
 
 export function ProgressBar() {
-  const currentStep = useTaxStore((s) => s.currentStep);
-  const highestStepReached = useTaxStore((s) => s.highestStepReached);
-  const stepLabels = useTaxStore((s) => s.stepLabels);
-  const goToStep = useTaxStore((s) => s.goToStep);
+  const currentStep = useTaxStore(s => s.currentStep);
+  const highestStepReached = useTaxStore(s => s.highestStepReached);
+  const stepLabels = useTaxStore(s => s.stepLabels);
+  const goToStep = useTaxStore(s => s.goToStep);
 
   return (
     <nav className="mb-8">
