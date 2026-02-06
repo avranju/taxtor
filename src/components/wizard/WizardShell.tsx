@@ -1,0 +1,66 @@
+import { useTaxStore } from '../../store/tax-store';
+import { ProgressBar } from './ProgressBar';
+import { PersonalInfo } from '../steps/PersonalInfo';
+import { SalaryIncome } from '../steps/SalaryIncome';
+import { SwpIncome } from '../steps/SwpIncome';
+import { UsStockIncome } from '../steps/UsStockIncome';
+import { OtherIncome } from '../steps/OtherIncome';
+import { Deductions } from '../steps/Deductions';
+import { AdvanceTaxPayments } from '../steps/AdvanceTaxPayments';
+
+const STEPS = [
+  PersonalInfo,
+  SalaryIncome,
+  SwpIncome,
+  UsStockIncome,
+  OtherIncome,
+  Deductions,
+  AdvanceTaxPayments,
+];
+
+export function WizardShell() {
+  const currentStep = useTaxStore((s) => s.currentStep);
+  const nextStep = useTaxStore((s) => s.nextStep);
+  const prevStep = useTaxStore((s) => s.prevStep);
+  const stepLabels = useTaxStore((s) => s.stepLabels);
+
+  const StepComponent = STEPS[currentStep];
+  const isFirstStep = currentStep === 0;
+  const isLastStep = currentStep === stepLabels.length - 1;
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <h1 className="mb-2 text-3xl font-bold text-gray-900">
+        Taxtor
+      </h1>
+      <p className="mb-6 text-gray-600">
+        Indian Advance Tax Calculator &mdash; FY 2025-26 (AY 2026-27)
+      </p>
+
+      <ProgressBar />
+
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <StepComponent />
+      </div>
+
+      <div className="mt-6 flex justify-between">
+        <button
+          type="button"
+          onClick={prevStep}
+          disabled={isFirstStep}
+          className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <button
+          type="button"
+          onClick={nextStep}
+          disabled={isLastStep}
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isLastStep ? 'Calculate' : 'Next'}
+        </button>
+      </div>
+    </div>
+  );
+}
