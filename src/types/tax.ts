@@ -23,10 +23,12 @@ export interface SalaryIncome {
 }
 
 export interface SWPIncome {
+  fundType: 'debt' | 'equity';
+  dateOfInvestment: string;
   totalWithdrawal: number;
   costBasis: number;
   holdingPeriodMonths: number;
-  fundType: 'debt' | 'equity';
+  tds: number;
 }
 
 export interface USStockIncome {
