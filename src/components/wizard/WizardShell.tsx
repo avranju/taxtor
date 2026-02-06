@@ -2,7 +2,7 @@ import { useTaxStore } from '../../store/tax-store';
 import { ProgressBar } from './ProgressBar';
 import { PersonalInfo } from '../steps/PersonalInfo';
 import { SalaryIncome } from '../steps/SalaryIncome';
-import { SwpIncome } from '../steps/SwpIncome';
+import { MfWithdrawals } from '../steps/MfWithdrawals';
 import { UsStockIncome } from '../steps/UsStockIncome';
 import { OtherIncome } from '../steps/OtherIncome';
 import { Deductions } from '../steps/Deductions';
@@ -11,7 +11,7 @@ import { AdvanceTaxPayments } from '../steps/AdvanceTaxPayments';
 const STEPS = [
   PersonalInfo,
   SalaryIncome,
-  SwpIncome,
+  MfWithdrawals,
   UsStockIncome,
   OtherIncome,
   Deductions,

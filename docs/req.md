@@ -33,13 +33,18 @@ Create a multi-step wizard with the following stages:
 - Standard deduction (auto-calculate ₹50,000 or pro-rata)
 - TDS deducted from salary
 
-#### Step 3: Income from Systematic Withdrawal Plan (SWP)
-- Total SWP withdrawals during FY 2025-26
-- Month-wise breakdown option (for accurate calculation)
-- Cost of acquisition/purchase price of debt fund units
-- Date of investment in debt fund
-- Type of debt fund (equity-oriented or debt-oriented)
-- TDS deducted on SWP (if any)
+#### Step 3: Mutual Fund Withdrawals
+Multiple entries supported (add/remove dynamically). Each entry captures:
+- Fund name (optional, e.g. "HDFC Balanced Advantage")
+- Fund type: equity-oriented or debt-oriented
+- Date of investment
+- Date of withdrawal (optional; defaults to FY start for holding period calculation)
+- Amount withdrawn (₹)
+- Cost of acquisition (₹)
+- TDS deducted (if any)
+- Holding period and LTCG/STCG classification (auto-calculated, read-only)
+
+Skip mode: checkbox "I had mutual fund withdrawals during FY 2025-26". When unchecked, stores empty list and advances.
 
 #### Step 4: Income from Sale of US Stocks
 - Total sale proceeds in USD
@@ -81,9 +86,11 @@ Create a multi-step wizard with the following stages:
 
 1. **Compute Gross Total Income**
    - Salary income (after standard deduction)
-   - Capital gains from SWP:
+   - Capital gains from mutual fund withdrawals (per entry):
      * If debt fund held >36 months: Long-term capital gain (20% with indexation)
      * If debt fund held ≤36 months: Short-term capital gain (add to income, tax at slab rates)
+     * If equity fund held >12 months: Long-term capital gain
+     * If equity fund held ≤12 months: Short-term capital gain
    - Capital gains from US stocks:
      * If held >24 months: Long-term capital gain (20% with indexation using CII)
      * If held ≤24 months: Short-term capital gain (15% flat)
@@ -248,7 +255,7 @@ Create a multi-step wizard with the following stages:
 interface TaxState {
   personalInfo: PersonalInfo;
   salaryIncome: SalaryIncome | null;
-  swpIncome: SWPIncome | null;
+  mfWithdrawals: MutualFundWithdrawal[];
   usStockIncome: USStockIncome | null;
   otherIncome: OtherIncome[];
   deductions: Deductions;

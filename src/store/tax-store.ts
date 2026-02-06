@@ -4,7 +4,7 @@ import type {
   TaxState,
   PersonalInfo,
   SalaryIncome,
-  SWPIncome,
+  MutualFundWithdrawal,
   USStockIncome,
   OtherIncome,
   Deductions,
@@ -15,7 +15,7 @@ import type {
 const STEP_LABELS = [
   'Personal Information',
   'Salary Income',
-  'SWP Income',
+  'MF Withdrawals',
   'US Stock Income',
   'Other Income',
   'Deductions',
@@ -32,7 +32,7 @@ interface TaxStore extends TaxState {
   goToStep: (step: number) => void;
   setPersonalInfo: (info: PersonalInfo) => void;
   setSalaryIncome: (income: SalaryIncome | null) => void;
-  setSwpIncome: (income: SWPIncome | null) => void;
+  setMfWithdrawals: (withdrawals: MutualFundWithdrawal[]) => void;
   setUsStockIncome: (income: USStockIncome | null) => void;
   setOtherIncome: (income: OtherIncome[]) => void;
   setDeductions: (deductions: Deductions) => void;
@@ -65,7 +65,7 @@ const initialDeductions: Deductions = {
 const initialState: TaxState = {
   personalInfo: initialPersonalInfo,
   salaryIncome: null,
-  swpIncome: null,
+  mfWithdrawals: [],
   usStockIncome: null,
   otherIncome: [],
   deductions: initialDeductions,
@@ -107,7 +107,7 @@ export const useTaxStore = create<TaxStore>()(
 
       setPersonalInfo: (info) => set({ personalInfo: info }),
       setSalaryIncome: (income) => set({ salaryIncome: income }),
-      setSwpIncome: (income) => set({ swpIncome: income }),
+      setMfWithdrawals: (withdrawals) => set({ mfWithdrawals: withdrawals }),
       setUsStockIncome: (income) => set({ usStockIncome: income }),
       setOtherIncome: (income) => set({ otherIncome: income }),
       setDeductions: (deductions) => set({ deductions }),
@@ -121,7 +121,7 @@ export const useTaxStore = create<TaxStore>()(
         return {
           personalInfo: state.personalInfo,
           salaryIncome: state.salaryIncome,
-          swpIncome: state.swpIncome,
+          mfWithdrawals: state.mfWithdrawals,
           usStockIncome: state.usStockIncome,
           otherIncome: state.otherIncome,
           deductions: state.deductions,

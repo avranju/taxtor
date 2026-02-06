@@ -22,10 +22,13 @@ export interface SalaryIncome {
   tds: number;
 }
 
-export interface SWPIncome {
+export interface MutualFundWithdrawal {
+  id: string;
+  fundName: string;
   fundType: 'debt' | 'equity';
   dateOfInvestment: string;
-  totalWithdrawal: number;
+  dateOfWithdrawal: string;
+  amountWithdrawn: number;
   costBasis: number;
   holdingPeriodMonths: number;
   tds: number;
@@ -88,7 +91,7 @@ export interface AdvanceTaxScheduleItem {
 export interface TaxState {
   personalInfo: PersonalInfo;
   salaryIncome: SalaryIncome | null;
-  swpIncome: SWPIncome | null;
+  mfWithdrawals: MutualFundWithdrawal[];
   usStockIncome: USStockIncome | null;
   otherIncome: OtherIncome[];
   deductions: Deductions;

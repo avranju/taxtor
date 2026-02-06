@@ -5,16 +5,24 @@ import type {
   AdvanceTaxScheduleItem,
 } from '../types/tax';
 
+export interface MfGainEntry {
+  id: string;
+  gain: number;
+  gainsType: 'LTCG' | 'STCG';
+}
+
 export function calculateCapitalGains(_state: TaxState): {
-  swpGains: number;
-  swpGainsType: 'LTCG' | 'STCG';
+  mfGains: MfGainEntry[];
+  mfLtcgTotal: number;
+  mfStcgTotal: number;
   usStockGains: number;
   usStockGainsType: 'LTCG' | 'STCG';
 } {
   // TODO: implement
   return {
-    swpGains: 0,
-    swpGainsType: 'STCG',
+    mfGains: [],
+    mfLtcgTotal: 0,
+    mfStcgTotal: 0,
     usStockGains: 0,
     usStockGainsType: 'STCG',
   };
