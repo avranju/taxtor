@@ -907,7 +907,7 @@ export function UsStockIncome() {
             No US stock sales to report. Click <strong>Next</strong> to continue or import from CSV.
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="file"
               accept=".csv"
@@ -925,6 +925,19 @@ export function UsStockIncome() {
               </svg>
               Import from CSV
             </button>
+            <div className="group relative flex items-center">
+              <button
+                type="button"
+                aria-label="CSV format help"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-xs font-semibold text-gray-600 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                ?
+              </button>
+              <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-72 -translate-x-1/2 rounded-md bg-gray-900 px-3 py-2 text-xs text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                CSV headers: Symbol, Security Description, Date Acquired, Date Sold, Proceeds, Cost
+                Basis. Dates in MM/DD/YYYY.
+              </div>
+            </div>
           </div>
         </div>
       </form>
@@ -941,7 +954,7 @@ export function UsStockIncome() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="file"
             accept=".csv"
@@ -959,6 +972,19 @@ export function UsStockIncome() {
             </svg>
             Import from CSV
           </button>
+          <div className="group relative flex items-center">
+            <button
+              type="button"
+              aria-label="CSV format help"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-xs font-semibold text-gray-600 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+              ?
+            </button>
+            <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-72 -translate-x-1/2 rounded-md bg-gray-900 px-3 py-2 text-xs text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+              CSV headers: Symbol, Security Description, Date Acquired, Date Sold, Proceeds, Cost
+              Basis. Dates in MM/DD/YYYY.
+            </div>
+          </div>
           <button
             type="button"
             onClick={handleDeleteAll}
