@@ -18,9 +18,10 @@ const STEPS = [
   AdvanceTaxPayments,
 ];
 
+export const WIZARD_FORM_ID = 'wizard-step-form';
+
 export function WizardShell() {
   const currentStep = useTaxStore((s) => s.currentStep);
-  const nextStep = useTaxStore((s) => s.nextStep);
   const prevStep = useTaxStore((s) => s.prevStep);
   const stepLabels = useTaxStore((s) => s.stepLabels);
 
@@ -53,8 +54,8 @@ export function WizardShell() {
           Previous
         </button>
         <button
-          type="button"
-          onClick={nextStep}
+          type="submit"
+          form={WIZARD_FORM_ID}
           disabled={isLastStep}
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >

@@ -10,9 +10,12 @@ export interface PersonalInfo {
   residentialStatus: ResidentialStatus;
   ageBracket: AgeBracket;
   financialYear: string;
+  dateOfUnemployment: string | null;
 }
 
 export interface SalaryIncome {
+  employmentStartDate: string;
+  employmentEndDate: string;
   grossSalary: number;
   professionalTax: number;
   standardDeduction: number;

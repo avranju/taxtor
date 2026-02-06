@@ -48,6 +48,7 @@ const initialPersonalInfo: PersonalInfo = {
   residentialStatus: 'resident',
   ageBracket: 'below60',
   financialYear: '2025-26',
+  dateOfUnemployment: null,
 };
 
 const initialDeductions: Deductions = {
