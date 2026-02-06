@@ -34,12 +34,18 @@ export interface MutualFundWithdrawal {
   tds: number;
 }
 
-export interface USStockIncome {
+export interface USStockSale {
+  id: string;
+  stockName: string;
+  dateOfPurchase: string;
+  dateOfSale: string;
   saleProceedsUSD: number;
   saleProceedsINR: number;
   costBasisUSD: number;
   costBasisINR: number;
+  brokerageCharges: number;
   holdingPeriodMonths: number;
+  tds: number;
 }
 
 export interface OtherIncome {
@@ -92,7 +98,7 @@ export interface TaxState {
   personalInfo: PersonalInfo;
   salaryIncome: SalaryIncome | null;
   mfWithdrawals: MutualFundWithdrawal[];
-  usStockIncome: USStockIncome | null;
+  usStockSales: USStockSale[];
   otherIncome: OtherIncome[];
   deductions: Deductions;
   advanceTaxPaid: AdvanceTaxPayment[];

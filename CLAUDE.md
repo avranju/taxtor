@@ -35,7 +35,7 @@ npm run test       # Run tests (Vitest expected)
 1. **Personal Information** — taxpayer category, residential status, age bracket
 2. **Salary Income** — gross salary, professional tax, standard deduction, TDS
 3. **MF Withdrawals** — multiple mutual fund redemption entries (debt/equity), per-entry capital gains with LTCG/STCG classification
-4. **US Stock Income** — sale proceeds in USD/INR, cost basis, holding period, capital gains
+4. **US Stock Income** — multiple US stock sale entries with sale proceeds (USD/INR), cost basis (USD/INR), brokerage, per-entry LTCG/STCG classification (>24 months threshold)
 5. **Other Income** — interest, rental, misc income with TDS
 6. **Deductions** — 80C, 80D, 80CCD(1B), 80G, 24(b), Chapter VI-A
 7. **Advance Tax Payments** — quarterly payments made (June/Sept/Dec/March)
@@ -44,7 +44,7 @@ npm run test       # Run tests (Vitest expected)
 
 Core functions that must be implemented:
 
-- `calculateCapitalGains()` — MF withdrawal gains per entry (debt: LTCG if >36 months, equity: LTCG if >12 months) and US stock gains (LTCG if >24 months at 20% with indexation, else STCG at 15%)
+- `calculateCapitalGains()` — MF withdrawal gains per entry (debt: LTCG if >36 months, equity: LTCG if >12 months) and US stock gains per entry (LTCG if >24 months at 20% with indexation, else STCG at 15%)
 - `calculateTaxLiability(regime: 'old' | 'new')` — apply slab rates, cess (4%), surcharge, rebate u/s 87A
 - `calculateAdvanceTaxSchedule()` — required vs actual installments
 - `calculateInterest234B()` — 1% per month simple interest on shortfall (advance tax < 90% of assessed tax)
@@ -58,7 +58,7 @@ interface TaxState {
   personalInfo: PersonalInfo;
   salaryIncome: SalaryIncome | null;
   mfWithdrawals: MutualFundWithdrawal[];
-  usStockIncome: USStockIncome | null;
+  usStockSales: USStockSale[];
   otherIncome: OtherIncome[];
   deductions: Deductions;
   advanceTaxPaid: AdvanceTaxPayment[];

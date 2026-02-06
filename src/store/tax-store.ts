@@ -5,7 +5,7 @@ import type {
   PersonalInfo,
   SalaryIncome,
   MutualFundWithdrawal,
-  USStockIncome,
+  USStockSale,
   OtherIncome,
   Deductions,
   AdvanceTaxPayment,
@@ -33,7 +33,7 @@ interface TaxStore extends TaxState {
   setPersonalInfo: (info: PersonalInfo) => void;
   setSalaryIncome: (income: SalaryIncome | null) => void;
   setMfWithdrawals: (withdrawals: MutualFundWithdrawal[]) => void;
-  setUsStockIncome: (income: USStockIncome | null) => void;
+  setUsStockSales: (sales: USStockSale[]) => void;
   setOtherIncome: (income: OtherIncome[]) => void;
   setDeductions: (deductions: Deductions) => void;
   setAdvanceTaxPaid: (payments: AdvanceTaxPayment[]) => void;
@@ -66,7 +66,7 @@ const initialState: TaxState = {
   personalInfo: initialPersonalInfo,
   salaryIncome: null,
   mfWithdrawals: [],
-  usStockIncome: null,
+  usStockSales: [],
   otherIncome: [],
   deductions: initialDeductions,
   advanceTaxPaid: [],
@@ -108,7 +108,7 @@ export const useTaxStore = create<TaxStore>()(
       setPersonalInfo: (info) => set({ personalInfo: info }),
       setSalaryIncome: (income) => set({ salaryIncome: income }),
       setMfWithdrawals: (withdrawals) => set({ mfWithdrawals: withdrawals }),
-      setUsStockIncome: (income) => set({ usStockIncome: income }),
+      setUsStockSales: (sales) => set({ usStockSales: sales }),
       setOtherIncome: (income) => set({ otherIncome: income }),
       setDeductions: (deductions) => set({ deductions }),
       setAdvanceTaxPaid: (payments) => set({ advanceTaxPaid: payments }),
@@ -122,7 +122,7 @@ export const useTaxStore = create<TaxStore>()(
           personalInfo: state.personalInfo,
           salaryIncome: state.salaryIncome,
           mfWithdrawals: state.mfWithdrawals,
-          usStockIncome: state.usStockIncome,
+          usStockSales: state.usStockSales,
           otherIncome: state.otherIncome,
           deductions: state.deductions,
           advanceTaxPaid: state.advanceTaxPaid,

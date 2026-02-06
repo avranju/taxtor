@@ -47,16 +47,19 @@ Multiple entries supported (add/remove dynamically). Each entry captures:
 Skip mode: checkbox "I had mutual fund withdrawals during FY 2025-26". When unchecked, stores empty list and advances.
 
 #### Step 4: Income from Sale of US Stocks
-- Total sale proceeds in USD
-- Conversion rate used (or fetch automatically based on transaction dates)
-- Total sale proceeds in INR
+Multiple entries supported (add/remove dynamically). Each entry captures:
+- Stock name (optional, e.g. "AAPL, GOOGL")
+- Date of purchase
+- Date of sale (within FY 2025-26)
+- Sale proceeds in USD
+- Sale proceeds in INR
 - Cost of acquisition in USD
 - Cost of acquisition in INR
-- Date of purchase
-- Date of sale
-- Brokerage and transaction charges
-- Holding period (auto-calculate: short-term vs long-term)
+- Brokerage and transaction charges (₹)
+- Holding period and LTCG/STCG classification (auto-calculated, read-only; threshold: >24 months)
 - TDS deducted (if any)
+
+Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, stores empty list and advances.
 
 #### Step 5: Other Income Sources
 - Interest from savings account
@@ -256,7 +259,7 @@ interface TaxState {
   personalInfo: PersonalInfo;
   salaryIncome: SalaryIncome | null;
   mfWithdrawals: MutualFundWithdrawal[];
-  usStockIncome: USStockIncome | null;
+  usStockSales: USStockSale[];
   otherIncome: OtherIncome[];
   deductions: Deductions;
   advanceTaxPaid: AdvanceTaxPayment[];

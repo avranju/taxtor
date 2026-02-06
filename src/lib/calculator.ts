@@ -11,20 +11,28 @@ export interface MfGainEntry {
   gainsType: 'LTCG' | 'STCG';
 }
 
+export interface USStockGainEntry {
+  id: string;
+  gain: number;
+  gainsType: 'LTCG' | 'STCG';
+}
+
 export function calculateCapitalGains(_state: TaxState): {
   mfGains: MfGainEntry[];
   mfLtcgTotal: number;
   mfStcgTotal: number;
-  usStockGains: number;
-  usStockGainsType: 'LTCG' | 'STCG';
+  usStockGains: USStockGainEntry[];
+  usStockLtcgTotal: number;
+  usStockStcgTotal: number;
 } {
   // TODO: implement
   return {
     mfGains: [],
     mfLtcgTotal: 0,
     mfStcgTotal: 0,
-    usStockGains: 0,
-    usStockGainsType: 'STCG',
+    usStockGains: [],
+    usStockLtcgTotal: 0,
+    usStockStcgTotal: 0,
   };
 }
 
