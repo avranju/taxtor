@@ -181,7 +181,15 @@ export function MfWithdrawals() {
     }
 
     return { totalWithdrawals, totalCost, totalLtcg, totalStcg, totalTds };
-  }, [watchedWithdrawals]);
+  }, [
+    watchedWithdrawals,
+    watchedWithdrawals
+      ?.map(
+        w =>
+          `${w.amountWithdrawn}-${w.costBasis}-${w.tds}-${w.dateOfInvestment}-${w.dateOfWithdrawal}`
+      )
+      .join(','),
+  ]);
 
   const onSubmit = (data: FormValues) => {
     const entries = data.withdrawals.map(w => ({
