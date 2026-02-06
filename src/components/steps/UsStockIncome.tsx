@@ -7,7 +7,7 @@ import * as Checkbox from '@radix-ui/react-checkbox';
 import { useTaxStore } from '../../store/tax-store';
 import { WIZARD_FORM_ID } from '../wizard/WizardShell';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { differenceInMonths, parseISO, format } from 'date-fns';
+import { differenceInMonths, parseISO, parse, format } from 'date-fns';
 import { useForexRate } from '../../hooks/useForexRate';
 
 const US_STOCK_LTCG_THRESHOLD_MONTHS = 24;
@@ -612,6 +612,7 @@ export function UsStockIncome() {
 
   const [hasUsStockSales, setHasUsStockSales] = useState(usStockSales.length > 0);
   const [collapsedEntries, setCollapsedEntries] = useState<Set<number>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -647,6 +648,20 @@ export function UsStockIncome() {
   });
 
   const watchedSales = watch('sales');
+
+  // Auto-uncheck if all entries are removed
+  useEffect(() => {
+    if (hasUsStockSales && watchedSales.length === 0) {
+      setHasUsStockSales(false);
+    }
+  }, [watchedSales.length, hasUsStockSales]);
+
+  const handleToggleHasUsStockSales = (checked: boolean) => {
+    setHasUsStockSales(checked);
+    if (checked && watchedSales.length === 0) {
+      append(createEmptySale());
+    }
+  };
 
   const toggleCollapse = (index: number) => {
     setCollapsedEntries(prev => {
@@ -707,6 +722,144 @@ export function UsStockIncome() {
       .join(','),
   ]);
 
+  const handleCsvImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = e.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split(/\r?\n/);
+      if (lines.length < 2) return;
+
+      // Robust CSV splitting by comma outside quotes
+      const splitCsv = (line: string) => {
+        const parts = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            parts.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        parts.push(current.trim());
+        return parts;
+      };
+
+      // Parse header to find column indices
+      const headers = splitCsv(lines[0]).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+      const findIdx = (name: string) => headers.findIndex(h => h.includes(name.toLowerCase()));
+
+      const idx = {
+        symbol: findIdx('symbol'),
+        description: findIdx('security description'),
+        dateAcquired: findIdx('date acquired'),
+        dateSold: findIdx('date sold'),
+        proceeds: findIdx('proceeds'),
+        costBasis: findIdx('cost basis'),
+      };
+
+      // Skip header
+      const dataLines = lines.slice(1);
+      const newEntries: FormValues['sales'] = [];
+
+      for (const line of dataLines) {
+        if (!line.trim()) continue;
+
+        const parts = splitCsv(line);
+        const clean = (val: string) =>
+          val
+            .replace(/^"|"$/g, '')
+            .replace(/[$,+]/g, '')
+            .trim();
+
+        try {
+          // Extract ticker from "MSFT(594918104)" format
+          const symbolRaw =
+            idx.symbol !== -1 ? parts[idx.symbol].replace(/^"|"$/g, '').trim() : '';
+          const stockName = symbolRaw.replace(/\(.*\)/, '').trim();
+
+          const dateAcquiredStr =
+            idx.dateAcquired !== -1
+              ? parts[idx.dateAcquired].replace(/^"|"$/g, '').trim()
+              : '';
+          const dateSoldStr =
+            idx.dateSold !== -1 ? parts[idx.dateSold].replace(/^"|"$/g, '').trim() : '';
+
+          if (!dateAcquiredStr || !dateSoldStr) continue;
+
+          // Parse MM/DD/YYYY dates
+          const dateAcquired = parse(dateAcquiredStr, 'MM/dd/yyyy', new Date());
+          const dateSold = parse(dateSoldStr, 'MM/dd/yyyy', new Date());
+
+          const proceedsUSD =
+            idx.proceeds !== -1 ? parseFloat(clean(parts[idx.proceeds])) : 0;
+          const costBasisUSD =
+            idx.costBasis !== -1 ? parseFloat(clean(parts[idx.costBasis])) : 0;
+
+          if (isNaN(proceedsUSD) || isNaN(costBasisUSD)) continue;
+
+          newEntries.push({
+            id: generateId(),
+            stockName: stockName || 'Imported Stock',
+            dateOfPurchase: format(dateAcquired, 'yyyy-MM-dd'),
+            dateOfSale: format(dateSold, 'yyyy-MM-dd'),
+            saleProceedsUSD: proceedsUSD,
+            saleProceedsINR: 0,
+            costBasisUSD: costBasisUSD,
+            costBasisINR: 0,
+            brokerageCharges: 0,
+            tds: 0,
+          });
+        } catch (err) {
+          console.error('Failed to parse CSV line:', line, err);
+        }
+      }
+
+      if (newEntries.length > 0) {
+        // If we only have the default empty entry, remove it
+        if (
+          fields.length === 1 &&
+          !watchedSales[0].dateOfPurchase &&
+          watchedSales[0].saleProceedsUSD === 0
+        ) {
+          remove(0);
+        }
+        // Collapse all existing entries before appending
+        const existingCount = fields.length;
+        const newCollapsed = new Set(collapsedEntries);
+        for (let i = 0; i < existingCount; i++) {
+          newCollapsed.add(i);
+        }
+        // Also collapse all newly imported entries
+        for (let i = 0; i < newEntries.length; i++) {
+          newCollapsed.add(existingCount + i);
+        }
+        setCollapsedEntries(newCollapsed);
+        append(newEntries);
+        setHasUsStockSales(true);
+      }
+
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  };
+
+  const handleDeleteAll = () => {
+    if (window.confirm('Are you sure you want to delete all rows?')) {
+      remove();
+    }
+  };
+
   const onSubmit = (data: FormValues) => {
     const entries = data.sales.map(s => ({
       id: s.id,
@@ -747,10 +900,32 @@ export function UsStockIncome() {
           </p>
         </div>
 
-        <SkipCheckbox checked={hasUsStockSales} onChange={setHasUsStockSales} />
+        <SkipCheckbox checked={hasUsStockSales} onChange={handleToggleHasUsStockSales} />
 
-        <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-          No US stock sales to report. Click <strong>Next</strong> to continue.
+        <div className="flex flex-col gap-4">
+          <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+            No US stock sales to report. Click <strong>Next</strong> to continue or import from CSV.
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="file"
+              accept=".csv"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleCsvImport}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            >
+              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Import from CSV
+            </button>
+          </div>
         </div>
       </form>
     );
@@ -758,14 +933,46 @@ export function UsStockIncome() {
 
   return (
     <form id={WIZARD_FORM_ID} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900">US Stock Income</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Capital gains from sale of US stocks during FY 2025-26
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">US Stock Income</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Capital gains from sale of US stocks during FY 2025-26
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="file"
+            accept=".csv"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleCsvImport}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+          >
+            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Import from CSV
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteAll}
+            className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete All Rows
+          </button>
+        </div>
       </div>
 
-      <SkipCheckbox checked={hasUsStockSales} onChange={setHasUsStockSales} />
+      <SkipCheckbox checked={hasUsStockSales} onChange={handleToggleHasUsStockSales} />
 
       {fields.map((field, index) => (
         <SaleEntryCard

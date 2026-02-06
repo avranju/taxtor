@@ -56,8 +56,11 @@ export function WizardShell() {
         <button
           type="submit"
           form={WIZARD_FORM_ID}
-          disabled={isLastStep}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className={`rounded-md px-4 py-2 text-sm font-medium text-white ${
+            isLastStep
+              ? 'bg-green-600 hover:bg-green-700'
+              : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
           {isLastStep ? 'Calculate' : 'Next'}
         </button>

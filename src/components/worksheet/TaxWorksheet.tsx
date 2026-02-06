@@ -1,4 +1,6 @@
 import { useTaxStore } from '../../store/tax-store';
+import { WIZARD_FORM_ID } from '../wizard/WizardShell';
+import { generateWorksheet } from '../../lib/calculator';
 import { useMemo } from 'react';
 
 const formatINR = (value: number) =>
@@ -10,20 +12,30 @@ const formatINR = (value: number) =>
 
 export function TaxWorksheet() {
   const calculationResults = useTaxStore(s => s.calculationResults);
+  const setCalculationResults = useTaxStore(s => s.setCalculationResults);
   const salaryIncome = useTaxStore(s => s.salaryIncome);
   const otherIncome = useTaxStore(s => s.otherIncome);
   const personalInfo = useTaxStore(s => s.personalInfo);
 
-  const totalOtherIncome = useMemo(() => 
-    otherIncome.reduce((acc, curr) => acc + curr.amount, 0), 
+  const totalOtherIncome = useMemo(() =>
+    otherIncome.reduce((acc, curr) => acc + curr.amount, 0),
     [otherIncome]
   );
 
+  const handleRecalculate = (e: React.FormEvent) => {
+    e.preventDefault();
+    const state = useTaxStore.getState();
+    const results = generateWorksheet(state);
+    setCalculationResults(results);
+  };
+
   if (!calculationResults) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-gray-200 bg-gray-50">
-        <p className="text-gray-500">No calculation results available. Please complete the wizard.</p>
-      </div>
+      <form id={WIZARD_FORM_ID} onSubmit={handleRecalculate}>
+        <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-gray-200 bg-gray-50">
+          <p className="text-gray-500">No calculation results available. Click <strong>Recalculate</strong> or go back to complete the wizard.</p>
+        </div>
+      </form>
     );
   }
 
@@ -43,7 +55,7 @@ export function TaxWorksheet() {
   const finalTax = recommendedRegime === 'old' ? taxOldRegime : taxNewRegime;
 
   return (
-    <div className="space-y-8 print:space-y-4">
+    <form id={WIZARD_FORM_ID} onSubmit={handleRecalculate} className="space-y-8 print:space-y-4">
       <div className="flex items-center justify-between border-b pb-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Tax Computation Worksheet</h2>
@@ -219,6 +231,6 @@ export function TaxWorksheet() {
           </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 }
