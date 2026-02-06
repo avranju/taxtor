@@ -20,6 +20,7 @@ const STEP_LABELS = [
   'Other Income',
   'Deductions',
   'Advance Tax Payments',
+  'Tax Worksheet',
 ] as const;
 
 interface TaxStore extends TaxState {

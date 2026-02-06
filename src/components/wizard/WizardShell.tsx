@@ -7,6 +7,7 @@ import { UsStockIncome } from '../steps/UsStockIncome';
 import { OtherIncome } from '../steps/OtherIncome';
 import { Deductions } from '../steps/Deductions';
 import { AdvanceTaxPayments } from '../steps/AdvanceTaxPayments';
+import { TaxWorksheet } from '../worksheet/TaxWorksheet';
 
 const STEPS = [
   PersonalInfo,
@@ -16,6 +17,7 @@ const STEPS = [
   OtherIncome,
   Deductions,
   AdvanceTaxPayments,
+  TaxWorksheet,
 ];
 
 export const WIZARD_FORM_ID = 'wizard-step-form';

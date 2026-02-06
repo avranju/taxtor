@@ -273,7 +273,7 @@ export function SalaryIncome() {
             id="grossSalary"
             type="number"
             min={0}
-            step={1}
+            step="0.01"
             placeholder="0"
             {...register('grossSalary', { valueAsNumber: true })}
             className={`block w-full rounded-md border py-2 pl-7 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -299,7 +299,7 @@ export function SalaryIncome() {
             id="professionalTax"
             type="number"
             min={0}
-            step={1}
+            step="0.01"
             placeholder="0"
             {...register('professionalTax', { valueAsNumber: true })}
             className={`block w-full rounded-md border py-2 pl-7 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -338,7 +338,7 @@ export function SalaryIncome() {
             id="tds"
             type="number"
             min={0}
-            step={1}
+            step="0.01"
             placeholder="0"
             {...register('tds', { valueAsNumber: true })}
             className={`block w-full rounded-md border py-2 pl-7 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${

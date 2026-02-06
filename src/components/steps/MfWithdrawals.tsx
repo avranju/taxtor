@@ -6,8 +6,8 @@ import * as Checkbox from '@radix-ui/react-checkbox';
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import { useTaxStore } from '../../store/tax-store';
 import { WIZARD_FORM_ID } from '../wizard/WizardShell';
-import { useState, useMemo } from 'react';
-import { differenceInMonths, parseISO } from 'date-fns';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { differenceInMonths, parseISO, parse, format } from 'date-fns';
 
 const DEBT_LTCG_THRESHOLD_MONTHS = 36;
 const EQUITY_LTCG_THRESHOLD_MONTHS = 12;
@@ -77,7 +77,7 @@ function createEmptyWithdrawal() {
   return {
     id: generateId(),
     fundName: '',
-    fundType: 'debt' as const,
+    fundType: 'equity' as const,
     dateOfInvestment: '',
     dateOfWithdrawal: '',
     amountWithdrawn: 0,
@@ -93,6 +93,7 @@ export function MfWithdrawals() {
 
   const [hasMfWithdrawals, setHasMfWithdrawals] = useState(mfWithdrawals.length > 0);
   const [collapsedEntries, setCollapsedEntries] = useState<Set<number>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -126,6 +127,20 @@ export function MfWithdrawals() {
   });
 
   const watchedWithdrawals = watch('withdrawals');
+
+  // Auto-uncheck if all entries are removed
+  useEffect(() => {
+    if (hasMfWithdrawals && watchedWithdrawals.length === 0) {
+      setHasMfWithdrawals(false);
+    }
+  }, [watchedWithdrawals.length, hasMfWithdrawals]);
+
+  const handleToggleHasMfWithdrawals = (checked: boolean) => {
+    setHasMfWithdrawals(checked);
+    if (checked && watchedWithdrawals.length === 0) {
+      append(createEmptyWithdrawal());
+    }
+  };
 
   const toggleCollapse = (index: number) => {
     setCollapsedEntries(prev => {
@@ -189,6 +204,123 @@ export function MfWithdrawals() {
     nextStep();
   };
 
+  const handleCsvImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = e.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split(/\r?\n/);
+      if (lines.length < 2) return;
+
+      // Robust CSV splitting by comma outside quotes
+      const splitCsv = (line: string) => {
+        const parts = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            parts.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        parts.push(current.trim());
+        return parts;
+      };
+
+      // Parse header to find column indices
+      const headers = splitCsv(lines[0]).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+      const findIdx = (name: string) => headers.indexOf(name.toLowerCase());
+
+      const idx = {
+        fundName: findIdx('Fund Name'),
+        fundType: findIdx('Fund Type'),
+        purchaseDate: findIdx('Purchase Date'),
+        purchaseValue: findIdx('Purchase Value'),
+        redemptionDate: findIdx('Redemption Date'),
+        redemptionValue: findIdx('Redemption Value'),
+      };
+
+      // Skip header
+      const dataLines = lines.slice(1);
+      const newEntries: z.infer<typeof withdrawalSchema>[] = [];
+      
+      for (const line of dataLines) {
+        if (!line.trim()) continue;
+
+        const parts = splitCsv(line);
+        const clean = parts.map(p => p.replace(/^"|"$/g, '').replace(/,/g, '').trim());
+
+        try {
+          const fundName = idx.fundName !== -1 ? parts[idx.fundName].replace(/^"|"$/g, '') : 'Imported Fund';
+          const fundTypeRaw = idx.fundType !== -1 ? clean[idx.fundType].toLowerCase() : 'equity';
+          const fundType = fundTypeRaw.includes('debt') ? ('debt' as const) : ('equity' as const);
+          
+          const purchaseDateStr = idx.purchaseDate !== -1 ? parts[idx.purchaseDate].replace(/^"|"$/g, '') : '';
+          const redemptionDateStr = idx.redemptionDate !== -1 ? parts[idx.redemptionDate].replace(/^"|"$/g, '') : '';
+
+          if (!purchaseDateStr || !redemptionDateStr) continue;
+
+          // Parse "Dec 29, 2021" or "Dec 29 2021"
+          const parseDate = (d: string) => {
+            // Handle both "Dec 29, 2021" and potential variations
+            return parse(d.replace(',', ''), 'MMM d yyyy', new Date());
+          };
+
+          const pDate = parseDate(purchaseDateStr);
+          const rDate = parseDate(redemptionDateStr);
+
+          const amountWithdrawn = idx.redemptionValue !== -1 ? parseFloat(clean[idx.redemptionValue]) : 0;
+          const costBasis = idx.purchaseValue !== -1 ? parseFloat(clean[idx.purchaseValue]) : 0;
+
+          const entry = {
+            id: generateId(),
+            fundName: fundName || 'Imported Fund',
+            fundType,
+            dateOfInvestment: format(pDate, 'yyyy-MM-dd'),
+            dateOfWithdrawal: format(rDate, 'yyyy-MM-dd'),
+            amountWithdrawn,
+            costBasis,
+            tds: 0,
+          };
+
+          if (!isNaN(entry.amountWithdrawn) && !isNaN(entry.costBasis)) {
+            newEntries.push(entry);
+          }
+        } catch (err) {
+          console.error('Failed to parse CSV line:', line, err);
+        }
+      }
+
+      if (newEntries.length > 0) {
+        // If we only have the default empty entry, remove it
+        if (fields.length === 1 && !watchedWithdrawals[0].dateOfInvestment && watchedWithdrawals[0].amountWithdrawn === 0) {
+          remove(0);
+        }
+        append(newEntries);
+        setHasMfWithdrawals(true);
+      }
+      
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  };
+
+  const handleDeleteAll = () => {
+    if (window.confirm('Are you sure you want to delete all rows?')) {
+      remove();
+    }
+  };
+
   if (!hasMfWithdrawals) {
     return (
       <form
@@ -206,10 +338,32 @@ export function MfWithdrawals() {
           </p>
         </div>
 
-        <SkipCheckbox checked={hasMfWithdrawals} onChange={setHasMfWithdrawals} />
+        <SkipCheckbox checked={hasMfWithdrawals} onChange={handleToggleHasMfWithdrawals} />
 
-        <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-          No mutual fund withdrawals to report. Click <strong>Next</strong> to continue.
+        <div className="flex flex-col gap-4">
+          <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+            No mutual fund withdrawals to report. Click <strong>Next</strong> to continue or import from CSV.
+          </div>
+          
+          <div className="flex gap-2">
+            <input
+              type="file"
+              accept=".csv"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleCsvImport}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            >
+              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Import from CSV
+            </button>
+          </div>
         </div>
       </form>
     );
@@ -217,14 +371,46 @@ export function MfWithdrawals() {
 
   return (
     <form id={WIZARD_FORM_ID} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900">Mutual Fund Withdrawals</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Redemptions from mutual funds during FY 2025-26
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Mutual Fund Withdrawals</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Redemptions from mutual funds during FY 2025-26
+          </p>
+        </div>
+        
+        <div className="flex gap-2">
+          <input
+            type="file"
+            accept=".csv"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleCsvImport}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+          >
+            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Import from CSV
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteAll}
+            className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete All Rows
+          </button>
+        </div>
       </div>
 
-      <SkipCheckbox checked={hasMfWithdrawals} onChange={setHasMfWithdrawals} />
+      <SkipCheckbox checked={hasMfWithdrawals} onChange={handleToggleHasMfWithdrawals} />
 
       {fields.map((field, index) => {
         const w = watchedWithdrawals?.[index];
@@ -455,7 +641,7 @@ export function MfWithdrawals() {
                       id={`withdrawals.${index}.amountWithdrawn`}
                       type="number"
                       min={0}
-                      step={1}
+                      step="0.01"
                       placeholder="0"
                       {...register(`withdrawals.${index}.amountWithdrawn`, {
                         valueAsNumber: true,
@@ -490,7 +676,7 @@ export function MfWithdrawals() {
                       id={`withdrawals.${index}.costBasis`}
                       type="number"
                       min={0}
-                      step={1}
+                      step="0.01"
                       placeholder="0"
                       {...register(`withdrawals.${index}.costBasis`, {
                         valueAsNumber: true,
@@ -523,7 +709,7 @@ export function MfWithdrawals() {
                       id={`withdrawals.${index}.tds`}
                       type="number"
                       min={0}
-                      step={1}
+                      step="0.01"
                       placeholder="0"
                       {...register(`withdrawals.${index}.tds`, { valueAsNumber: true })}
                       className={`block w-full rounded-md border py-2 pl-7 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${

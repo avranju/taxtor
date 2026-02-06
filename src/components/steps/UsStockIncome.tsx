@@ -402,7 +402,7 @@ function SaleEntryCard({
                 id={`sales.${index}.saleProceedsINR`}
                 type="number"
                 min={0}
-                step={1}
+                step="0.01"
                 placeholder="0"
                 {...register(`sales.${index}.saleProceedsINR`, {
                   valueAsNumber: true,
@@ -475,7 +475,7 @@ function SaleEntryCard({
                 id={`sales.${index}.costBasisINR`}
                 type="number"
                 min={0}
-                step={1}
+                step="0.01"
                 placeholder="0"
                 {...register(`sales.${index}.costBasisINR`, {
                   valueAsNumber: true,
@@ -515,7 +515,7 @@ function SaleEntryCard({
                 id={`sales.${index}.brokerageCharges`}
                 type="number"
                 min={0}
-                step={1}
+                step="0.01"
                 placeholder="0"
                 {...register(`sales.${index}.brokerageCharges`, {
                   valueAsNumber: true,
@@ -548,7 +548,7 @@ function SaleEntryCard({
                 id={`sales.${index}.tds`}
                 type="number"
                 min={0}
-                step={1}
+                step="0.01"
                 placeholder="0"
                 {...register(`sales.${index}.tds`, { valueAsNumber: true })}
                 className={`block w-full rounded-md border py-2 pl-7 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
