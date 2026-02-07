@@ -9,6 +9,7 @@ export interface PersonalInfo {
   category: TaxpayerCategory;
   residentialStatus: ResidentialStatus;
   ageBracket: AgeBracket;
+  hasBusinessOrProfessionalIncome?: boolean;
   financialYear: string;
   dateOfUnemployment: string | null;
 }

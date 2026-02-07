@@ -37,16 +37,24 @@ function getIndexedCost(cost: number, purchaseDate: string, saleDate: string): n
 }
 
 export interface GainSummary {
+  equityLtcg: number;
+  equityStcg: number;
+  debtLtcg: number;
+  debtStcgAsSlab: number;
+  totalTds: number;
+}
+
+export interface USGainSummary {
   ltcg: number;
   stcg: number;
-  taxableAsSlab: number;
   totalTds: number;
 }
 
 export function calculateMFGains(withdrawals: MutualFundWithdrawal[]): GainSummary {
-  let ltcg = 0;
-  let stcg = 0;
-  let taxableAsSlab = 0;
+  let equityLtcg = 0;
+  let equityStcg = 0;
+  let debtLtcg = 0;
+  let debtStcgAsSlab = 0;
   let totalTds = 0;
 
   for (const w of withdrawals) {
@@ -56,9 +64,9 @@ export function calculateMFGains(withdrawals: MutualFundWithdrawal[]): GainSumma
 
     if (w.fundType === 'equity') {
       if (w.holdingPeriodMonths > EQUITY_LTCG_THRESHOLD_MONTHS) {
-        ltcg += gain;
+        equityLtcg += gain;
       } else {
-        stcg += gain;
+        equityStcg += gain;
       }
     } else {
       // Debt
@@ -66,18 +74,18 @@ export function calculateMFGains(withdrawals: MutualFundWithdrawal[]): GainSumma
         // LTCG with indexation
         const indexedCost = getIndexedCost(w.costBasis, w.dateOfInvestment, w.dateOfWithdrawal);
         const indexedGain = Math.max(0, w.amountWithdrawn - indexedCost);
-        ltcg += indexedGain;
+        debtLtcg += indexedGain;
       } else {
         // STCG taxable at slab
-        taxableAsSlab += gain;
+        debtStcgAsSlab += gain;
       }
     }
   }
 
-  return { ltcg, stcg, taxableAsSlab, totalTds };
+  return { equityLtcg, equityStcg, debtLtcg, debtStcgAsSlab, totalTds };
 }
 
-export function calculateUSStockGains(sales: USStockSale[]): GainSummary {
+export function calculateUSStockGains(sales: USStockSale[]): USGainSummary {
   let ltcg = 0;
   let stcg = 0;
   let totalTds = 0;
@@ -98,7 +106,7 @@ export function calculateUSStockGains(sales: USStockSale[]): GainSummary {
     }
   }
 
-  return { ltcg, stcg, taxableAsSlab: 0, totalTds };
+  return { ltcg, stcg, totalTds };
 }
 
 function calculateSlabTax(income: number, regime: TaxRegime): number {
@@ -164,7 +172,7 @@ export function generateWorksheet(state: TaxState): TaxCalculationResults {
 
   // Gross Total Income (excluding special rate gains)
   const salaryNet = salaryIncome ? Math.max(0, salaryIncome.grossSalary - salaryIncome.professionalTax - salaryIncome.standardDeduction) : 0;
-  const slabIncomeBase = salaryNet + totalOtherIncome + mfSummary.taxableAsSlab;
+  const slabIncomeBase = salaryNet + totalOtherIncome + mfSummary.debtStcgAsSlab;
 
   // Total TDS
   const totalTds = (salaryIncome?.tds || 0) + mfSummary.totalTds + usSummary.totalTds + otherIncomeTds;
@@ -185,14 +193,14 @@ export function generateWorksheet(state: TaxState): TaxCalculationResults {
 
     // Tax on Equity MF Gains
     // STCG: 20%
-    totalTax += mfSummary.stcg * EQUITY_STCG_RATE;
+    totalTax += mfSummary.equityStcg * EQUITY_STCG_RATE;
     // LTCG: 12.5% on gain > 1.25L
-    if (mfSummary.ltcg > EQUITY_LTCG_EXEMPTION) {
-      totalTax += (mfSummary.ltcg - EQUITY_LTCG_EXEMPTION) * EQUITY_LTCG_RATE;
+    if (mfSummary.equityLtcg > EQUITY_LTCG_EXEMPTION) {
+      totalTax += (mfSummary.equityLtcg - EQUITY_LTCG_EXEMPTION) * EQUITY_LTCG_RATE;
     }
 
     // Tax on Debt MF LTCG: 20% (already indexed in gain computation)
-    totalTax += mfSummary.ltcg * DEBT_LTCG_RATE; // Note: simplified, req says 20%
+    totalTax += mfSummary.debtLtcg * DEBT_LTCG_RATE;
 
     // Tax on US Stocks
     // STCG: 15% (per req)
@@ -200,11 +208,17 @@ export function generateWorksheet(state: TaxState): TaxCalculationResults {
     // LTCG: 20%
     totalTax += usSummary.ltcg * US_STOCK_LTCG_RATE;
 
-    const surcharge = calculateSurcharge(totalTax, taxableIncome + mfSummary.ltcg + mfSummary.stcg + usSummary.ltcg + usSummary.stcg);
+    const taxableIncomeWithSpecialRates = taxableIncome
+      + mfSummary.equityLtcg
+      + mfSummary.equityStcg
+      + mfSummary.debtLtcg
+      + usSummary.ltcg
+      + usSummary.stcg;
+    const surcharge = calculateSurcharge(totalTax, taxableIncomeWithSpecialRates);
     totalTax += surcharge;
     totalTax += totalTax * CESS_RATE;
 
-    return { totalTax, taxableIncome: taxableIncome + mfSummary.ltcg + mfSummary.stcg + usSummary.ltcg + usSummary.stcg };
+    return { totalTax, taxableIncome: taxableIncomeWithSpecialRates };
   };
 
   const oldResult = computeRegimeTax('old');
@@ -212,47 +226,71 @@ export function generateWorksheet(state: TaxState): TaxCalculationResults {
 
   const recommendedRegime: TaxRegime = oldResult.totalTax <= newResult.totalTax ? 'old' : 'new';
   const finalTax = recommendedRegime === 'old' ? oldResult.totalTax : newResult.totalTax;
+  const assessedTax = Math.max(0, finalTax - totalTds);
+  const isResidentSenior = state.personalInfo.residentialStatus === 'resident' && state.personalInfo.ageBracket !== 'below60';
+  const hasBusinessOrProfessionalIncome = state.personalInfo.hasBusinessOrProfessionalIncome ?? true;
+  const exemptFromAdvanceTax = isResidentSenior && !hasBusinessOrProfessionalIncome;
+  const isAdvanceTaxApplicable = !exemptFromAdvanceTax && assessedTax > 10_000;
+  const advanceTaxBase = isAdvanceTaxApplicable ? assessedTax : 0;
 
   // Advance Tax Schedule
   const schedule: AdvanceTaxScheduleItem[] = [
-    { quarter: 'June', dueDate: '2025-06-15', cumulativePercentage: 15, requiredAmount: finalTax * 0.15, actualPaid: 0, shortfall: 0 },
-    { quarter: 'September', dueDate: '2025-09-15', cumulativePercentage: 45, requiredAmount: finalTax * 0.45, actualPaid: 0, shortfall: 0 },
-    { quarter: 'December', dueDate: '2025-12-15', cumulativePercentage: 75, requiredAmount: finalTax * 0.75, actualPaid: 0, shortfall: 0 },
-    { quarter: 'March', dueDate: '2026-03-15', cumulativePercentage: 100, requiredAmount: finalTax * 1.00, actualPaid: 0, shortfall: 0 },
+    { quarter: 'June', dueDate: '2025-06-15', cumulativePercentage: 15, requiredAmount: advanceTaxBase * 0.15, actualPaid: 0, shortfall: 0 },
+    { quarter: 'September', dueDate: '2025-09-15', cumulativePercentage: 45, requiredAmount: advanceTaxBase * 0.45, actualPaid: 0, shortfall: 0 },
+    { quarter: 'December', dueDate: '2025-12-15', cumulativePercentage: 75, requiredAmount: advanceTaxBase * 0.75, actualPaid: 0, shortfall: 0 },
+    { quarter: 'March', dueDate: '2026-03-15', cumulativePercentage: 100, requiredAmount: advanceTaxBase * 1.00, actualPaid: 0, shortfall: 0 },
   ];
 
-  advanceTaxPaid.forEach(p => {
-    const item = schedule.find(s => s.quarter.toLowerCase() === p.quarter.toLowerCase());
-    if (item) item.actualPaid += p.amountPaid;
-  });
+  const validPayments = advanceTaxPaid
+    .map(p => ({
+      amount: p.amountPaid,
+      paidOn: parseISO(p.datePaid || p.dueDate),
+    }))
+    .filter(p => p.amount > 0 && !Number.isNaN(p.paidOn.getTime()));
 
-  // Calculate shortfalls (cumulative)
-  let cumulativePaid = 0;
+  const paidThroughMarch31 = validPayments.reduce((acc, p) => {
+    return p.paidOn <= parseISO('2026-03-31') ? acc + p.amount : acc;
+  }, 0);
+  const totalAdvanceTaxPaid = validPayments.reduce((acc, p) => acc + p.amount, 0);
+
+  // Calculate shortfalls based on cumulative paid by each statutory due date.
   schedule.forEach(item => {
-    cumulativePaid += item.actualPaid;
-    item.shortfall = Math.max(0, item.requiredAmount - cumulativePaid);
+    const dueDate = parseISO(item.dueDate);
+    const cumulativePaidByDueDate = validPayments.reduce((acc, p) => {
+      return p.paidOn <= dueDate ? acc + p.amount : acc;
+    }, 0);
+    item.actualPaid = cumulativePaidByDueDate;
+    item.shortfall = Math.max(0, item.requiredAmount - cumulativePaidByDueDate);
   });
 
   // Interest 234C
-  const interest234C = schedule.reduce((acc, item) => {
-    if (item.shortfall > 0) {
-      // 1% per month for 3 months (except last installment which is 1 month)
-      const months = item.quarter === 'March' ? 1 : 3;
-      return acc + (item.shortfall * 0.01 * months);
-    }
-    return acc;
-  }, 0);
+  const interest234C = isAdvanceTaxApplicable
+    ? schedule.reduce((acc, item) => {
+      if (item.shortfall > 0) {
+        // 1% per month for 3 months (except last installment which is 1 month)
+        const months = item.quarter === 'March' ? 1 : 3;
+        return acc + (item.shortfall * 0.01 * months);
+      }
+      return acc;
+    }, 0)
+    : 0;
 
   // Interest 234B
   let interest234B = 0;
-  if (cumulativePaid < finalTax * 0.90) {
-    const shortfall = finalTax - cumulativePaid;
+  if (isAdvanceTaxApplicable && paidThroughMarch31 < assessedTax * 0.90) {
+    const required90Percent = assessedTax * 0.90;
+    const shortfall = required90Percent - paidThroughMarch31;
     // 1% per month from April to July (4 months)
     interest234B = shortfall * 0.01 * 4;
   }
 
   return {
-    totalIncome: slabIncomeBase + mfSummary.ltcg + mfSummary.stcg + usSummary.ltcg + usSummary.stcg,
+    totalIncome: slabIncomeBase
+      + mfSummary.equityLtcg
+      + mfSummary.equityStcg
+      + mfSummary.debtLtcg
+      + usSummary.ltcg
+      + usSummary.stcg,
     taxableIncome: recommendedRegime === 'old' ? oldResult.taxableIncome : newResult.taxableIncome,
     taxOldRegime: oldResult.totalTax,
     taxNewRegime: newResult.totalTax,
@@ -261,6 +299,6 @@ export function generateWorksheet(state: TaxState): TaxCalculationResults {
     interest234B,
     interest234C,
     totalTdsCredited: totalTds,
-    netAmountPayable: Math.max(0, finalTax + interest234B + interest234C - cumulativePaid - totalTds),
+    netAmountPayable: Math.max(0, assessedTax + interest234B + interest234C - totalAdvanceTaxPaid),
   };
 }

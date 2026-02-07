@@ -28,6 +28,7 @@ Create a multi-step wizard with the following stages:
   - Senior Citizen (60-80 years)
   - Super Senior Citizen (above 80 years)
 - Residential status: Resident/Non-Resident/RNOR
+- Business/professional income indicator (Yes/No) for advance-tax senior-citizen exemption check
 - Date of unemployment (if applicable during the year)
 
 #### Step 2: Income from Salary (if applicable)
@@ -89,7 +90,7 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
 
 #### Step 7: Advance Tax Payments Made
 
-- Payment made by June 15, 2025 (15% of tax liability)
+- Payment made by June 15, 2025 (15% of tax due for advance tax)
 - Payment made by September 15, 2025 (45% cumulative)
 - Payment made by December 15, 2025 (75% cumulative)
 - Payment made by March 15, 2026 (100%)
@@ -135,23 +136,33 @@ Skip mode: checkbox "I had US stock sales during FY 2025-26". When unchecked, st
    - Add surcharge if applicable (income > ₹50L)
 
 4. **Calculate Advance Tax Liability**
-   - If total tax liability > ₹10,000, advance tax is mandatory
+   - Compute `Tax Due for Advance Tax` as:
+     - Total tax liability (including surcharge and cess)
+     - minus TDS/TCS and eligible relief credits entered in the app
+   - If `Tax Due for Advance Tax` > ₹10,000, advance tax is mandatory
+   - Exemption: Resident senior/super-senior citizens with no business or professional income are not liable to pay advance tax
    - Required installments:
-     - By June 15: 15% of total tax
-     - By Sept 15: 45% of total tax (cumulative)
-     - By Dec 15: 75% of total tax (cumulative)
-     - By March 15: 100% of total tax
+     - By June 15: 15% of `Tax Due for Advance Tax`
+     - By Sept 15: 45% of `Tax Due for Advance Tax` (cumulative)
+     - By Dec 15: 75% of `Tax Due for Advance Tax` (cumulative)
+     - By March 15: 100% of `Tax Due for Advance Tax`
 
 5. **Calculate Interest u/s 234B** (for shortfall in advance tax)
+   - Only if taxpayer was liable for advance tax
+   - Compute `Assessed Tax` as total tax liability (including surcharge and cess) minus TDS/TCS and eligible relief credits entered in the app
    - If advance tax paid < 90% of assessed tax
    - Interest: 1% per month (simple interest)
-   - Period: April 1, 2026 to date of assessment (assume July 31, 2026 for estimation)
+   - Interest amount for estimation: 1% x number of months x (assessed tax - advance tax paid)
+   - Period for worksheet estimate: April 1, 2026 to July 31, 2026 (4 months)
 
 6. **Calculate Interest u/s 234C** (for deferment of advance tax installments)
+   - Only if taxpayer was liable for advance tax
    For each installment:
+   - Compare cumulative advance-tax paid up to due date against required cumulative percentage of `Tax Due for Advance Tax`
    - If payment < required amount, charge interest on shortfall
    - Interest: 1% per month (simple interest)
-   - Calculate separately for each due date
+   - Months: 3 months each for June/September/December installments, 1 month for March installment
+   - Calculate separately for each due date and sum the values
 
 ### Special Considerations
 
